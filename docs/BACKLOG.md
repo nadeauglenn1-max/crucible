@@ -31,30 +31,17 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how all of the above works.
 
 Ordered by leverage. Each rides on the solid V1.
 
-### 1. Sandbox the code grader  ·  *safety-critical, do first*
+### 1. Sandbox the code grader ✅ done  ·  *the public-flip gate*
 
-- **What.** `CodeTaskEnv._grade` runs the grader in-process. Isolate it so it can run
-  code produced by an *untrusted* agent (a real LLM) without risk.
-- **Why.** The moment a model writes real patches, we execute a stranger's code.
-  In-process is fine for the scripted tests today and reckless in production. This is
-  the production bar, not a nice-to-have.
-- **How.**
-  1. Add a `Sandbox` seam: an interface `run(files: dict[str,str], command: list[str])
-     -> (exit_code, stdout, stderr)`. Put it in `crucible/sandbox.py`.
-  2. First adapter: **subprocess**. Materialize files to a temp dir (as `_grade`
-     already does), run `command` with `subprocess.run(..., timeout=T, cwd=tmp,
-     env=<minimal>)`, capture the exit code. Reward from exit code (0 = pass).
-  3. Change `CodeTaskEnv` to take a `command` (e.g. `["python", "-m", "pytest", "-q"]`)
-     instead of (or alongside) the in-process `grader`, and score on exit code.
-  4. **Gotchas:** (a) *determinism* — a subprocess must still be a pure function of
-     the files, so pin `PYTHONHASHSEED=0`, strip the environment, forbid network, and
-     keep wall-clock out of the digest. (b) *timeouts* — a non-terminating agent
-     program must fail closed to a non-passing grade, not hang. (c) the real isolation
-     (container/seccomp/nsjail) is a second adapter behind the same seam — the plugin
-     shape means the kernel doesn't change when you upgrade the sandbox.
-- **Done when:** `CodeTaskEnv` grades via subprocess pytest on a real temp repo, a
-  malicious/looping submission is contained (timeout → non-pass), and an episode
-  still replays byte-for-byte.
+Shipped in `crucible/sandbox.py`: a `Sandbox` seam (`run(files, command) ->
+GradeResult`), a `SubprocessSandbox` adapter (materialize to a temp dir, run the
+command in a subprocess with a minimal environment, `PYTHONHASHSEED=0`, and a hard
+timeout — fail closed on timeout / crash / launch error), and `command_grader`, which
+turns a sandboxed command into a `CodeTaskEnv` grader in one line. The agent's code
+now runs in a *child process*, not ours. Proven: pass/fail, a looping submission
+contained by timeout, a bad binary → grade-not-crash, and a full episode replays
+byte-for-byte through the sandbox. 100% covered. *Second adapter (container /
+seccomp / nsjail) slots behind the same seam when it's needed.*
 
 ### 2. TRL / verifiers / prime-rl export  ·  *the adoption keystone*
 

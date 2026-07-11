@@ -8,6 +8,7 @@ an agent that plugs in.
 
 from .env import Action, Environment, Observation, StepResult
 from .rollout import Agent, ReplayReport, replay, rollout
+from .sandbox import GradeResult, Sandbox, SubprocessSandbox, command_grader
 from .trajectory import Trajectory, Transition
 
 __all__ = [
@@ -21,6 +22,10 @@ __all__ = [
     "rollout",
     "replay",
     "ReplayReport",
+    "Sandbox",
+    "SubprocessSandbox",
+    "GradeResult",
+    "command_grader",
 ]
 
 __version__ = "0.1.0"

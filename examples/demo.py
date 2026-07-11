@@ -9,9 +9,10 @@ from __future__ import annotations
 from typing import Callable
 
 import importlib.util
+import sys
 from pathlib import Path
 
-from crucible import Environment, replay, rollout
+from crucible import Environment, SubprocessSandbox, command_grader, replay, rollout
 from crucible.envs import CodeTaskEnv, GuessEnv, SQLTaskEnv
 from examples.agents import BinarySearchAgent, ScriptedAgent
 
@@ -71,6 +72,17 @@ def main() -> None:
     run(
         "CodeTaskEnv - fix the bug so the test goes green (the reward writes itself)",
         lambda: CodeTaskEnv({"solution.py": BUGGY}, "Fix add so it adds.", grade_add),
+        ScriptedAgent([{"solution.py": BUGGY}, {"solution.py": FIXED}]),
+        seed=0,
+    )
+
+    # Same task, but graded in a subprocess sandbox: the agent's code runs in a
+    # child process, not ours -- the safe path for an untrusted model.
+    check = [sys.executable, "-c", "import solution; assert solution.add(2, 3) == 5"]
+    sandboxed = command_grader(check, sandbox=SubprocessSandbox(timeout=15))
+    run(
+        "CodeTaskEnv - graded in a SUBPROCESS SANDBOX (safe for untrusted code)",
+        lambda: CodeTaskEnv({"solution.py": BUGGY}, "Fix add so it adds.", sandboxed),
         ScriptedAgent([{"solution.py": BUGGY}, {"solution.py": FIXED}]),
         seed=0,
     )

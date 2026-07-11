@@ -139,6 +139,30 @@ that lives in the library as `crucible.replay`, where you have the env in hand.)
 
 ---
 
+## 6b. Sandboxed grading (`crucible/sandbox.py`)
+
+`CodeTaskEnv`'s default grader runs in-process (imports the file, calls it) — fine
+for trusted, scripted graders, reckless against a real model. The safe path runs the
+check in a **subprocess**:
+
+```python
+from crucible import SubprocessSandbox, command_grader
+from crucible.envs import CodeTaskEnv
+
+check = ["python", "-m", "pytest", "-q"]          # or any check command
+grader = command_grader(check, sandbox=SubprocessSandbox(timeout=30))
+env = CodeTaskEnv(files, "make the tests pass", grader)  # untrusted code now runs in a child process
+```
+
+- **`Sandbox`** is a one-method seam (`run(files, command) -> GradeResult`).
+  `SubprocessSandbox` is the first adapter; a container/seccomp adapter slots in
+  behind the same interface without touching any environment.
+- **Fail closed:** a timeout, a crash, or a bad command is a *non-passing grade*
+  (`GradeResult.passed == False`), never a hang or an exception that escapes.
+- **Determinism preserved:** the environment is stripped to a minimal allowlist and
+  `PYTHONHASHSEED` is pinned, so a deterministic test is still a pure function of the
+  files — the episode replays byte-for-byte through the sandbox.
+
 ## 7. Recipe: write your own environment
 
 The whole point of Crucible is that this is easy. Wrap software you already have:

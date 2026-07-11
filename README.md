@@ -34,7 +34,11 @@ open **authoring layer**. That's the seam Crucible fills. The full argument is i
 ## Install
 
 ```bash
-pip install -e ".[dev]"     # from a clone; core is zero-dependency, Python 3.11+
+# use it (public repo; a PyPI release is on the roadmap)
+pip install "crucible-rl @ git+https://github.com/nadeauglenn1-max/crucible.git"
+
+# or hack on it (from a clone)
+pip install -e ".[dev]"     # core is zero-dependency, Python 3.11+
 ```
 
 ## Quickstart (60 seconds)
@@ -149,9 +153,10 @@ ships with tests and moves the docs in the same commit (see
 
 ## Status & roadmap
 
-**V1 (the MVP) is complete** — author → run → grade → replay → persist, as a real
-tool, on one code path, 100% coverage. Progress at a glance (full "how to build it"
-detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
+**V1 (the MVP) is complete**, and the repo is **public under MIT** with tests, CI,
+and a code-owner +1 required to merge. Author → run → grade → replay → persist, as a
+real tool, on one code path, 100% coverage. Progress at a glance (full "how to build
+it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 
 **Built**
 
@@ -167,13 +172,17 @@ detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] TRL adapter — a Crucible environment *as* a GRPO reward function
 - [x] verifiers adapter — same bridge for Prime Intellect's stack
 - [x] CI + ≥90% coverage gate (Python 3.11–3.13)
+- [x] Public (MIT); contributions via PR with green CI + a code-owner +1 required
+- [x] Gradio demo app (`space/app.py`) — runs locally (`python space/app.py`)
 
 **Next**
 
-- [ ] Flip to public (MIT) + enable branch protection
-- [ ] Hugging Face Space — an in-browser "forge and replay" demo
-- [ ] A real GRPO training run validating the TRL/verifiers adapters end to end
-- [ ] Trajectory commons — shareable, auditable trajectory datasets
+- [ ] **A real GRPO training run** — fine-tune a small model against a Crucible
+      environment end to end; the proof that it *trains*, not just grades
+- [ ] Publish to PyPI (`pip install crucible-rl`)
+- [ ] Trajectory commons — shareable, auditable trajectory datasets on the Hub
+- [ ] Host the demo Space *(app is built; hosting deferred — Hugging Face now
+      charges for Gradio Spaces, and a free static/`gradio-lite` port is the fallback)*
 - [ ] Learned reward for non-verifiable tasks *(parked — research)*
 
 ## What it is *not*

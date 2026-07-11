@@ -123,8 +123,12 @@ crucible/            the zero-dependency core + example environments
   env.py             the Environment contract (reset/step, determinism, digest)
   trajectory.py      the replayable record (JSON, versioned save/load, fingerprint)
   rollout.py         rollout() records; replay() re-runs and verifies
+  registry.py        register/make envs by name (powers `crucible replay`)
+  reward.py          Rubric — partial-credit rewards from weighted checks
+  sandbox.py         run a grader/command in a subprocess (safe for untrusted code)
+  export.py          flatten trajectories to {prompt, completion, reward} / JSONL
   cli.py             the `crucible` command
-  envs/              GuessEnv, SQLTaskEnv, CodeTaskEnv
+  envs/              GuessEnv, SQLTaskEnv, CodeTaskEnv, CommandEnv
 examples/            example agents + the runnable demo (not packaged)
 tests/               the suite (100% coverage, enforced in CI)
 docs/                VISION (why), ARCHITECTURE (how), BACKLOG (what's next)

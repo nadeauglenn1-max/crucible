@@ -7,6 +7,7 @@ an agent that plugs in.
 """
 
 from .env import Action, Environment, Observation, StepResult
+from .export import to_records, write_jsonl
 from .registry import make, register, registered
 from .reward import Criterion, Rubric, rubric
 from .rollout import Agent, ReplayReport, replay, rollout
@@ -34,6 +35,8 @@ __all__ = [
     "Rubric",
     "Criterion",
     "rubric",
+    "to_records",
+    "write_jsonl",
 ]
 
 __version__ = "0.1.0"

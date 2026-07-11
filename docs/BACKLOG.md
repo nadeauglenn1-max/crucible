@@ -43,26 +43,19 @@ contained by timeout, a bad binary → grade-not-crash, and a full episode repla
 byte-for-byte through the sandbox. 100% covered. *Second adapter (container /
 seccomp / nsjail) slots behind the same seam when it's needed.*
 
-### 2. TRL / verifiers / prime-rl export  ·  *the adoption keystone*
+### 2. Training export  ·  *the adoption keystone*  ·  *core done; trainer adapter open*
 
-- **What.** Turn a `Trajectory` (or a batch) into the data shape an RL trainer
-  consumes, so Crucible episodes feed a *real* training run.
-- **Why.** The difference between "starred the repo" and "uses the tool." HF's TRL is
-  the socket most researchers already have.
-- **How.**
-  1. New module `crucible/export.py`. Study the input format of the target
-     (`verifiers` environment spec / TRL `GRPOTrainer` dataset / prime-rl rollout).
-     They want, per step: prompt/observation, the completion/action, and the
-     scalar/binary reward — which is exactly a `Transition`.
-  2. Write `to_verifiers(traj) -> dict` and/or `to_trl_dataset(trajs) -> list[dict]`
-     that flatten transitions into `{prompt, completion, reward}` records.
-  3. Keep it an **optional extra**, not a core dependency: `pip install
-     crucible-rl[trl]`. The core stays zero-dep (CONVENTIONS).
-  4. **Gotchas:** observations/actions are rich (dicts) but trainers usually want
-     text — provide a `render(observation) -> str` hook per environment (default:
-     `json.dumps`) so the export is faithful without hard-coding a text shape.
-- **Done when:** a Crucible trajectory round-trips into a minimal TRL/verifiers run in
-  an example, with a test asserting the exported record shape.
+- [x] **Format-agnostic core** — `crucible/export.py`: `to_records(traj)` flattens a
+      trajectory into `{env_id, seed, step, prompt, completion, reward}` records (the
+      per-step triple every RL trainer wants); `write_jsonl(trajs, path)` writes a
+      training dataset. A `render_observation` / `render_action` hook turns rich
+      dict observations into the text a trainer expects (default: strings as-is,
+      else canonical JSON). Plain dicts/JSONL ⇒ zero dependency. 100% covered.
+- [ ] **Trainer-specific adapter** — a thin, optional-extra mapping from these
+      neutral records onto a concrete schema (TRL `GRPOTrainer` dataset / verifiers /
+      prime-rl), pinned against that trainer's *current* API, installed via
+      `crucible-rl[trl]` so the core stays zero-dep. Done when a Crucible trajectory
+      drives a minimal real training run in an example.
 
 ### 3. Environment registry + `crucible replay <file>` ✅ done
 

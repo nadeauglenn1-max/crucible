@@ -43,11 +43,9 @@ environment. Full run + how to reproduce: [`examples/results/`](examples/results
 ## Install
 
 ```bash
-# use it (public repo; a PyPI release is on the roadmap)
-pip install "crucible-rl @ git+https://github.com/nadeauglenn1-max/crucible.git"
-
-# or hack on it (from a clone)
-pip install -e ".[dev]"     # core is zero-dependency, Python 3.11+
+pip install crucible-rl              # the zero-dependency core, Python 3.11+
+pip install "crucible-rl[train]"     # + the RL stack, to reproduce the GRPO run
+pip install -e ".[dev]"              # or hack on it from a clone
 ```
 
 ## Quickstart (60 seconds)

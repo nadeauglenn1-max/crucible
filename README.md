@@ -36,9 +36,15 @@ open **authoring layer**. That's the seam Crucible fills. The full argument is i
 Not a toy: a `SQLTaskEnv` used *directly* as a GRPO reward — no labels, no hand-written
 reward code — took `Qwen2.5-0.5B-Instruct` from **5% → 100%** on a real SQL task in 80
 steps on a single laptop GPU. The model discovered the query itself, guided only by the
-environment. Full run + how to reproduce: [`examples/results/`](examples/results/README.md).
+environment.
 
 ![A 0.5B model learns a SQL task from a Crucible environment](docs/assets/grpo_sql.png)
+
+And it's **not one lucky task** — a fresh model trained on four *distinct* SQL skills
+improved on every one (subquery, `SUM`, `HAVING`, `AVG`). The method trains, not the
+task. Full runs + how to reproduce: [`examples/results/`](examples/results/README.md).
+
+![Four SQL skills, four fresh models, each taught by a Crucible environment](docs/assets/grpo_suite.png)
 
 ## Install
 
@@ -182,8 +188,8 @@ it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] Public (MIT); contributions via PR with green CI + a code-owner +1 required
 - [x] Gradio demo app (`space/app.py`) — runs locally (`python space/app.py`)
 - [x] **A real GRPO training run** — a 0.5B model learned a SQL task **5% → 100%**
-      with a Crucible environment *as* the reward, no labels
-      ([`examples/results/`](examples/results/README.md))
+      with a Crucible environment *as* the reward, no labels; **generalizes** across
+      four distinct SQL skills ([`examples/results/`](examples/results/README.md))
 
 **Next**
 

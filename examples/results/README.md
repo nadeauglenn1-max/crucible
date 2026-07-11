@@ -54,3 +54,30 @@ python -m examples.results.plot_grpo        # writes docs/assets/grpo_sql.png
 > `eval()` mode and the KV cache on. Evaluating while the trainer's
 > gradient-checkpointing/no-cache regime is still active silently degrades generation and
 > will read a false 0% — the accuracy check in `train_grpo.py` restores eval mode first.
+
+## Not a one-off — the generalization battery
+
+The obvious question about a single 5% → 100% is *"cherry-picked task?"*. So
+[`examples/train_grpo_suite.py`](../train_grpo_suite.py) trains a **fresh** copy of the
+same 0.5B model, from the same pretrained weights, on **four distinct SQL skills** — each
+with its own Crucible `SQLTaskEnv` as the only reward. Every one improved:
+
+![Four SQL skills, four fresh models, each taught by a Crucible environment](../../docs/assets/grpo_suite.png)
+
+| task | SQL skill | before | after (60 steps) |
+| --- | --- | --- | --- |
+| `second_highest` | subquery / `LIMIT offset` | 15% | **90%** |
+| `dept_avg_top` | `GROUP BY` + `AVG` | 40% | **85%** |
+| `dept_payroll` | `GROUP BY` + `SUM` + `ORDER` | 25% | **55%** |
+| `dept_headcount` | `GROUP BY` + `HAVING` | 65% | **70%** |
+
+The gains track the headroom — the tasks that started low moved most; `dept_headcount`,
+already solved most of the time, barely moved. That's the honest shape of a real result,
+not four suspiciously-perfect climbs. The model learned a correct, distinct query for
+each skill (e.g. `... GROUP BY department HAVING COUNT(*) > 1`), guided only by the
+environment. It's the **method** that trains, not one lucky task.
+
+```bash
+python -m examples.train_grpo_suite          # runs all four (fresh model each), ~15 min on 8GB
+python -m examples.results.plot_grpo_suite   # regenerate the chart from grpo_suite.json (no GPU)
+```

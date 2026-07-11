@@ -77,6 +77,12 @@ holds.
       `... ORDER BY salary DESC LIMIT 1, 1` on its own. Result, chart, and one-command
       reproduction in [`examples/results/`](../examples/results/README.md). Needs `trl`
       + a GPU, so it's a documented example, not a CI test.
+- [x] **Generalization battery** — [`examples/train_grpo_suite.py`](../examples/train_grpo_suite.py)
+      answers "is it a one-off?": a *fresh* 0.5B model trained on **four distinct SQL
+      skills** (subquery/OFFSET, `GROUP BY`+`SUM`, `HAVING`, `AVG`) improved on every
+      one (15→90, 25→55, 65→70, 40→85 %). The method trains, not one lucky task. The
+      task ground truth is CPU-tested in `tests/test_train_grpo_suite.py`; the run
+      needs a GPU.
 - [x] **verifiers adapter** — `crucible/integrations/verifiers.py`, built against
       Prime Intellect's verifiers API (reward funcs return a float, combined by a
       `Rubric`). `env_reward_fn(env_factory)` turns a Crucible environment into a

@@ -90,6 +90,10 @@ not CLI-replayable, and the CLI says so. 100% covered.
       command (argv), reward is exit-0 **and** stdout matches expected. Reuses the
       sandbox, is registerable + CLI-replayable (whole config is data), replays
       byte-for-byte. 100% covered.
+- [x] **Stateful terminal env** — `envs/terminal.py` `TerminalEnv`: a persistent
+      shell session where commands accumulate state across steps (mkdir here, write
+      there); reward is a goal over the workdir files. The terminal-agent shape;
+      replays byte-for-byte for deterministic command sequences. 100% covered.
 - [ ] **HTTP/API env** — wrap a service. **Gotcha:** the hardest to make
       deterministic (external state); start with a recorded/mock backend and document
       the caveat honestly (`replay` will expose any drift).

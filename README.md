@@ -107,6 +107,7 @@ observations, verifiable reward, digests) and a full worked example are in
 | `SQLTaskEnv` | Wrapping **real SQLite** — reward is programmatic and verifiable (run the query, compare the rows) |
 | `CodeTaskEnv` | The SWE-agent shape — **the test suite is the reward function** (edit files, grader runs, green is the reward) |
 | `CommandEnv` | Wrap any **command-line tool** — the agent emits a command, reward is exit-0 + stdout match (sandboxed, registerable) |
+| `TerminalEnv` | A **stateful shell session** — commands accumulate state across steps (mkdir here, write there); reward is a goal over the workdir |
 
 ## The CLI
 

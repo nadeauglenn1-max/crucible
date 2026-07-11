@@ -9,5 +9,6 @@ from .code import CodeTaskEnv
 from .command import CommandEnv
 from .guess import GuessEnv
 from .sql import SQLTaskEnv
+from .terminal import TerminalEnv
 
-__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv", "CommandEnv"]
+__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv", "CommandEnv", "TerminalEnv"]

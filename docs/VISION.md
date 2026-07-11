@@ -86,41 +86,13 @@ developers adopt it bottom-up, let a company condense out of the adoption.
 
 ## 7. Roadmap
 
-Built the way we always build: V1 is the **MVP** — not a cut-corner prototype but
-the *smallest complete, production-quality whole* that expresses the entire thesis
-on one code path, with every default maintained (≥90% coverage + CI gate, docs move
-with code, clean-room). Then the fun.
+The roadmap and backlog live in one place — **[`BACKLOG.md`](BACKLOG.md)** — so they
+never drift out of sync with this document. It records what's built (V1, the MVP,
+complete) and what's next (the fun: sandbox the grader, the TRL/verifiers export, a
+Space, more wrappers, rubrics, the commons), each future item written to
+junior-dev "how to build it" detail.
 
-### V1 — the MVP (author → run → grade → replay → persist, as a real tool)
-
-- [x] Core: `Environment`, `Trajectory`, `rollout`, `replay`.
-- [x] Example envs: deterministic `GuessEnv`; real-SQLite `SQLTaskEnv`
-      (wrap-real-software → verifiable reward); `CodeTaskEnv` — the SWE-agent shape
-      where **the test suite is the reward function**, fully replayable.
-- [x] CI + coverage gate (`.github/workflows/ci.yml`, ≥90% across 3.11–3.13).
-- [x] **Trajectory persistence** — `Trajectory.save`/`load` write a versioned JSON
-      envelope (rejects an unknown format version). The trajectory is the artifact
-      the whole product exists to make; it now leaves memory.
-- [x] **A minimal `crucible` CLI** — `crucible show <file>` summarizes and
-      integrity-checks a saved episode. (Env-bound replay from the CLI needs an
-      environment registry and is post-V1; library replay already exists.)
-
-**V1 is complete** — author → run → grade → replay → persist, as a real tool,
-100% coverage, CI gate, one code path. Now the fun.
-
-### Then the fun (post-V1 — rides on a solid V1)
-
-- [ ] **Sandbox the code grader.** `CodeTaskEnv` runs the grader in-process today
-      (safe for the scripted/documented contract); isolating it
-      (subprocess/container/seccomp) is what unlocks *untrusted* agents. Named, not
-      faked.
-- [ ] A `verifiers`/prime-rl/TRL-compatible export so trajectories feed real
-      training — the adoption keystone (HF's RL trainer is the socket).
-- [ ] A Crucible **Space** — drop an agent into an environment in-browser, watch it
-      get scored and replayed. The 1am-star demo.
-- [ ] More wrappers: subprocess/CLI env, HTTP/API env, real git-repo-with-pytest
-      grader (subprocess) on top of `CodeTaskEnv`.
-- [ ] Reward composition (rubrics) + the honest hard part: signal for
-      non-verifiable tasks — *stay programmatic until this is designed carefully.*
-- [ ] The trajectory **commons** — trajectories as shareable, auditable datasets
-      ("GitHub for agent experience").
+The way we build it: V1 is the **MVP** — not a cut-corner prototype but the *smallest
+complete, production-quality whole* on one code path, every default maintained (100%
+coverage + CI gate, docs move with code, clean-room). Then the fun rides on it. How
+the built system works is in [`ARCHITECTURE.md`](ARCHITECTURE.md).

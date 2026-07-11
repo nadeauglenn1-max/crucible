@@ -8,45 +8,152 @@
 
 Wrap a CLI, a database, a codebase, or an API in a few lines and it becomes an
 *environment*: an agent can be run through it, scored on real outcomes, and — the
-part nobody else has — its whole episode **replayed deterministically**, so every
-run is reproducible and every reward is auditable.
+part nobody else has — its whole episode **replayed deterministically**, so every run
+is reproducible and every reward is auditable.
+
+```python
+from crucible import rollout, replay
+
+traj = rollout(my_env, my_agent, seed=0)   # run the agent, record the episode
+report = replay(fresh_env, traj)           # re-run and verify it byte-for-byte
+assert report.ok
+traj.save("episode.trajectory.json")       # the artifact leaves memory
+```
 
 ## Why this exists
 
-The frontier of AI has moved off pre-training. Models now improve by **doing** —
-reinforcement learning in environments — and the whole field agrees on the
-bottleneck: *"RL environments are the key bottleneck to the next wave of AI
-progress, but big labs are locking them down."* Environments are the **training
-data of 2026**, and there is no open, easy way to *make* them. Writing one takes
-days; reward functions are brittle; most are too narrow to matter.
+The frontier of AI moved off pre-training. Models now improve by **doing** —
+reinforcement learning in environments — and the field agrees on the bottleneck:
+*"RL environments are the key bottleneck to the next wave of AI progress, but big
+labs are locking them down."* Environments are the **training data of 2026**, and
+there is no open, easy way to *make* them. The open ecosystem has a hub (Prime
+Intellect) and a training stack (TRL, verifiers, prime-rl) — it does not have a great
+open **authoring layer**. That's the seam Crucible fills. The full argument is in
+[`docs/VISION.md`](docs/VISION.md).
 
-Crucible is the missing authoring layer:
+## Install
 
-- **Environments as code.** Wrap real software; don't hand-build a simulator.
-- **Verifiable rewards.** Reward comes from programmatic checks on real state
-  (tests pass, query returns the right rows) — not a learned reward model — so it
-  is compatible with RLVR / GRPO-style training out of the box.
-- **Deterministic replay.** Every episode records a trajectory that re-runs
-  byte-for-byte against a fresh environment. Reproducible training, auditable
-  rewards, regression-testable environments.
+```bash
+pip install -e ".[dev]"     # from a clone; core is zero-dependency, Python 3.11+
+```
+
+## Quickstart (60 seconds)
+
+Run the built-in demo — three real worlds, each forged and replayed:
+
+```bash
+python -m examples.demo
+```
+
+```
+=== CodeTaskEnv - fix the bug so the test goes green (the reward writes itself) ===
+  steps: 2   total reward: +0.90   replay: reproduced OK
+```
+
+Inspect a saved episode from the terminal:
+
+```bash
+crucible show episode.trajectory.json      # summary + integrity check
+```
+
+## Core concepts
+
+Three nouns, two verbs — the whole core is ~180 lines and imports only the standard
+library.
+
+| Piece | What it is |
+| --- | --- |
+| **`Environment`** | Real software wrapped with `reset(seed)` / `step(action)` |
+| **`Agent`** | Anything with `act(observation) -> action` (scripted, search, an LLM) |
+| **`Trajectory`** | The replayable episode record (seed, observations, actions, rewards) |
+| **`rollout`** | Drives an agent through an environment and records a Trajectory |
+| **`replay`** | Re-runs a Trajectory against a fresh environment and verifies it |
+
+How each of these works internally — the rollout loop, the replay verifier, the
+determinism contract, digests, the on-disk format — is documented to junior-dev
+detail in **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**.
+
+## Write your own environment
+
+Wrap software you already have; implement two methods and (optionally) a digest:
+
+```python
+from crucible.env import Environment, StepResult
+
+class ReverseStringEnv(Environment):
+    def __init__(self, target: str):
+        self.target = target
+    def reset(self, seed: int):
+        return {"task": f"reverse: {self.target!r}"}
+    def step(self, action):
+        correct = str(action) == self.target[::-1]
+        return StepResult(
+            observation={"you_said": str(action)},
+            reward=1.0 if correct else -0.1,
+            done=correct,
+            info={"correct": correct},
+        )
+```
+
+The rules that make an environment *replayable* (determinism, JSON-serializable
+observations, verifiable reward, digests) and a full worked example are in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §7.
+
+## The example environments (`crucible/envs/`)
+
+| Env | Shows |
+| --- | --- |
+| `GuessEnv` | A fully deterministic game — the clean proof that replay reproduces an episode exactly |
+| `SQLTaskEnv` | Wrapping **real SQLite** — reward is programmatic and verifiable (run the query, compare the rows) |
+| `CodeTaskEnv` | The SWE-agent shape — **the test suite is the reward function** (edit files, grader runs, green is the reward) |
+
+## The CLI
+
+`crucible show <file>` loads a saved trajectory, summarizes it (env, seed, steps,
+total reward, fingerprint), and integrity-checks it. Env-bound replay from the CLI is
+a [backlog](docs/BACKLOG.md) item; library replay (`crucible.replay`) works today.
+
+## Project layout
+
+```
+crucible/            the zero-dependency core + example environments
+  env.py             the Environment contract (reset/step, determinism, digest)
+  trajectory.py      the replayable record (JSON, versioned save/load, fingerprint)
+  rollout.py         rollout() records; replay() re-runs and verifies
+  cli.py             the `crucible` command
+  envs/              GuessEnv, SQLTaskEnv, CodeTaskEnv
+examples/            example agents + the runnable demo (not packaged)
+tests/               the suite (100% coverage, enforced in CI)
+docs/                VISION (why), ARCHITECTURE (how), BACKLOG (what's next)
+```
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+pytest                     # runs the suite; pyproject enforces --cov-fail-under=90
+```
+
+CI (`.github/workflows/ci.yml`) runs the same gate on Python 3.11–3.13. Every change
+ships with tests and moves the docs in the same commit (see
+[`CONVENTIONS.md`](CONVENTIONS.md)).
+
+## Status & roadmap
+
+**V1 (the MVP) is complete** — author → run → grade → replay → persist, as a real
+tool, on one code path, 100% coverage. What's built and what's next — each future
+feature written to junior-dev "how to build it" detail — lives in
+**[`docs/BACKLOG.md`](docs/BACKLOG.md)**. Next up: sandbox the code grader, then the
+TRL/verifiers export, then a Hugging Face Space.
 
 ## What it is *not*
 
-Crucible is **training infrastructure** — the Gymnasium / Prime-Intellect lineage:
-a place to *make* and *run* environments. It is not a runtime agent-accountability
-or governance system. That boundary is deliberate and kept in the code.
+Crucible is **training/eval infrastructure** (the Gymnasium / Prime-Intellect
+lineage). Its "verification" is programmatic task-success checking for reward. It is
+deliberately **not** a runtime agent-accountability or governance system — a
+different field. See [`docs/VISION.md`](docs/VISION.md) §5.
 
-## Status
+## License
 
-**V1 complete** — author → run → grade → replay → persist, as a real tool. Core
-(`Environment`, `Trajectory`, `rollout`, `replay`), trajectory persistence
-(versioned on-disk format), a `crucible` CLI, and three example environments: a
-deterministic guessing game, a **real SQLite** SQL task, and a **code task graded by
-its own tests**. Python 3.11+, zero-dependency core, **100% coverage**, CI gate.
-See [`docs/VISION.md`](docs/VISION.md). Next up is the fun (a TRL/verifiers export, a
-Space, grader sandbox, the trajectory commons).
-
-```bash
-python -m examples.demo             # forge agents through all three worlds, replay each
-crucible show episode.trajectory.json   # summarize + integrity-check a saved episode
-```
+Proprietary and private for now; intended open (Apache-2.0) on publication. See
+[`LICENSE`](LICENSE).

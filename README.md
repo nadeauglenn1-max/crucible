@@ -154,8 +154,8 @@ crucible/            the zero-dependency core + example environments
   sandbox.py         run a grader/command in a subprocess (safe for untrusted code)
   export.py          flatten trajectories to {prompt, completion, reward} / JSONL
   cli.py             the `crucible` command
-  envs/              GuessEnv, SQLTaskEnv, CodeTaskEnv, CommandEnv
-examples/            example agents + the runnable demo (not packaged)
+  envs/              Guess, SQLTask, CodeTask, Command, Terminal, HttpTask
+examples/            demo, agents, and the GRPO training runs + results (not packaged)
 tests/               the suite (100% coverage, enforced in CI)
 docs/                VISION (why), ARCHITECTURE (how), BACKLOG (what's next)
 ```
@@ -198,10 +198,12 @@ it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
       with a Crucible environment *as* the reward, no labels; **generalizes** across
       four distinct SQL skills **and three different environment types** (database,
       shell, code) ([`examples/results/`](examples/results/README.md))
+- [x] Packaging — `pip install crucible-rl` (zero-dep core) / `[train]` extra for the
+      RL stack; PyPI-publish-ready (metadata, wheel + sdist pass `twine check`)
 
 **Next**
 
-- [ ] Publish to PyPI (`pip install crucible-rl`)
+- [ ] Push the release to PyPI (packaging is ready; `twine upload` pending)
 - [ ] Trajectory commons — shareable, auditable trajectory datasets on the Hub
 - [ ] Host the demo Space *(app is built; hosting deferred — Hugging Face now
       charges for Gradio Spaces, and a free static/`gradio-lite` port is the fallback)*
@@ -216,7 +218,6 @@ different field. See [`docs/VISION.md`](docs/VISION.md) §5.
 
 ## License & contributing
 
-**MIT** ([`LICENSE`](LICENSE)) — fork it and build. The repo is private for now and
-flips to public once the code-grader sandbox lands. Contributions are welcome via
-pull request, and every merge needs a maintainer +1 (see
-[`CONTRIBUTING.md`](CONTRIBUTING.md)).
+**MIT** ([`LICENSE`](LICENSE)) — fork it and build. The repo is public; contributions
+are welcome via pull request, and every merge needs green CI (Python 3.11–3.13) plus a
+code-owner +1 (see [`CONTRIBUTING.md`](CONTRIBUTING.md)).

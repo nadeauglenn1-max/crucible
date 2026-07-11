@@ -32,6 +32,6 @@ there. If a design starts to look like "prove what a deployed agent did," stop.
 ## Provenance
 
 Clean-room: personal account and environment only, its own history, no code from
-the author's other projects. Licensed **MIT**; private for now, flips to public once
-the code-grader sandbox lands. Contributions merge only with a maintainer +1
-(CODEOWNERS + branch protection) — see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+the author's other projects. Licensed **MIT**; public. Contributions merge only with
+green CI plus a maintainer +1 (CODEOWNERS + branch protection) — see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).

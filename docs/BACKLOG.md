@@ -173,5 +173,9 @@ reward for non-verifiable tasks remains parked (see below). 100% covered.
   RAG, open-ended work). Stay programmatic until it's designed carefully — a bad
   learned reward is worse than no environment. Also watch the provenance boundary:
   "grade the quality of an agent's judgment" drifts toward the excluded field.
-- **Publishing / licensing.** Repo is local. When it opens: Apache-2.0 (adoption) vs.
-  BSL (protect the hosted business) vs. dual — decided at publication.
+- **A hosted training service.** The core is the open authoring layer; a managed
+  "point it at your software, get a trained adapter back" service is the eventual
+  business. Deliberately parked until the open tool has traction.
+
+_Resolved: the repo is **public under MIT** and the packaging is PyPI-ready — the
+earlier "publish / license" question is settled._

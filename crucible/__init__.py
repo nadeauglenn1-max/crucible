@@ -7,6 +7,7 @@ an agent that plugs in.
 """
 
 from .env import Action, Environment, Observation, StepResult
+from .registry import make, register, registered
 from .rollout import Agent, ReplayReport, replay, rollout
 from .sandbox import GradeResult, Sandbox, SubprocessSandbox, command_grader
 from .trajectory import Trajectory, Transition
@@ -26,6 +27,9 @@ __all__ = [
     "SubprocessSandbox",
     "GradeResult",
     "command_grader",
+    "register",
+    "make",
+    "registered",
 ]
 
 __version__ = "0.1.0"

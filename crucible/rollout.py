@@ -46,7 +46,12 @@ def rollout(
 
     agent.reset()
     observation = env.reset(seed)
-    traj = Trajectory(env_id=env.name(), seed=seed, initial_observation=observation)
+    traj = Trajectory(
+        env_id=env.name(),
+        seed=seed,
+        initial_observation=observation,
+        env_config=env.config(),
+    )
 
     for _ in range(max_steps):
         action = agent.act(observation)

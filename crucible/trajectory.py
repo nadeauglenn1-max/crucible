@@ -14,9 +14,12 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any
 
-#: On-disk format version. A saved trajectory is wrapped in an envelope carrying
-#: this, so the format can evolve without silently misreading old files.
-FORMAT_VERSION = 1
+#: On-disk format versions. A saved trajectory is wrapped in an envelope carrying
+#: the current version, so the format can evolve without silently misreading old
+#: files. Version 2 added ``env_config`` (for CLI replay); version 1 files still
+#: load (their ``env_config`` defaults to empty).
+FORMAT_VERSION = 2
+_SUPPORTED_VERSIONS = (1, 2)
 
 
 @dataclass
@@ -41,6 +44,7 @@ class Trajectory:
     env_id: str
     seed: int
     initial_observation: Any
+    env_config: dict = field(default_factory=dict)
     transitions: list[Transition] = field(default_factory=list)
     total_reward: float = 0.0
 
@@ -66,6 +70,7 @@ class Trajectory:
             env_id=data["env_id"],
             seed=data["seed"],
             initial_observation=data["initial_observation"],
+            env_config=data.get("env_config", {}),  # absent in v1 files
             transitions=transitions,
             total_reward=data.get("total_reward", 0.0),
         )
@@ -94,9 +99,9 @@ class Trajectory:
         version rather than silently misreading it."""
         envelope = json.loads(Path(path).read_text(encoding="utf-8"))
         version = envelope.get("version")
-        if version != FORMAT_VERSION:
+        if version not in _SUPPORTED_VERSIONS:
             raise ValueError(
                 f"unsupported trajectory format version {version!r} "
-                f"(this build reads version {FORMAT_VERSION})"
+                f"(this build reads versions {list(_SUPPORTED_VERSIONS)})"
             )
         return cls.from_dict(envelope["trajectory"])

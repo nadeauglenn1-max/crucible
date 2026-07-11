@@ -109,9 +109,11 @@ observations, verifiable reward, digests) and a full worked example are in
 
 ## The CLI
 
-`crucible show <file>` loads a saved trajectory, summarizes it (env, seed, steps,
-total reward, fingerprint), and integrity-checks it. Env-bound replay from the CLI is
-a [backlog](docs/BACKLOG.md) item; library replay (`crucible.replay`) works today.
+- `crucible show <file>` — summarize a saved episode (env, seed, steps, reward,
+  fingerprint) and integrity-check it.
+- `crucible replay <file>` — rebuild the environment from the registry and **re-run**
+  the episode, confirming it reproduces (or printing the mismatches). Works for
+  registered environments; see [ARCHITECTURE §6c](docs/ARCHITECTURE.md).
 
 ## Project layout
 

@@ -61,3 +61,11 @@ class Environment(ABC):
     def name(self) -> str:
         """The environment's identifier, defaulting to the class name."""
         return self.env_id or type(self).__name__
+
+    def config(self) -> dict:
+        """A JSON-serializable dict that ``registry.make(name, config)`` can use to
+        reconstruct an identical environment. The default is empty; an environment
+        that wants to be CLI-replayable overrides this to return its constructor
+        arguments. An environment carrying a live callable simply can't, and says so
+        by leaving this empty."""
+        return {}

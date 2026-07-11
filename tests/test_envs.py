@@ -1,6 +1,6 @@
 import pytest
 
-from crucible import replay, rollout
+from crucible import Environment, StepResult, replay, rollout
 from crucible.envs import GuessEnv, SQLTaskEnv
 from examples.agents import BinarySearchAgent, ScriptedAgent
 
@@ -57,11 +57,22 @@ def test_guess_rejects_bad_bounds():
         GuessEnv(low=100, high=1)
 
 
-def test_env_name_defaults_to_class_then_env_id():
-    env = GuessEnv()
-    assert env.name() == "GuessEnv"  # falls back to the class name
-    env.env_id = "guess-v1"
-    assert env.name() == "guess-v1"  # an explicit id wins
+def test_env_name_uses_registered_then_class_then_override():
+    # A registered environment carries its registered name.
+    assert GuessEnv().name() == "guess"
+
+    # An unregistered environment falls back to its class name; an explicit env_id wins.
+    class LocalEnv(Environment):
+        def reset(self, seed):
+            return 0
+
+        def step(self, action):
+            return StepResult(observation=0, reward=0.0, done=True)
+
+    local = LocalEnv()
+    assert local.name() == "LocalEnv"
+    local.env_id = "custom"
+    assert local.name() == "custom"
 
 
 # --- SQLTaskEnv -----------------------------------------------------------------

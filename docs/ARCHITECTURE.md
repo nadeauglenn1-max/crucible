@@ -130,12 +130,32 @@ A `Trajectory` is a dataclass: `env_id`, `seed`, `initial_observation`, a list o
 
 ## 6. The CLI (`crucible/cli.py`)
 
-`crucible show <file>` loads a saved trajectory, prints a summary (env, seed, steps,
-total reward, fingerprint), and runs an **integrity check**: the recorded
-`total_reward` must equal the sum of the step rewards. It's a self-contained sniff
-test that doesn't need the environment. (Env-*bound* replay from the CLI — re-running
-against a fresh env — needs an environment registry and is a backlog item; today
-that lives in the library as `crucible.replay`, where you have the env in hand.)
+- **`crucible show <file>`** loads a saved trajectory, prints a summary (env, seed,
+  steps, total reward, fingerprint), and runs an **integrity check**: the recorded
+  `total_reward` must equal the sum of the step rewards. A self-contained sniff test
+  that needs no environment.
+- **`crucible replay <file>`** re-runs the episode: it rebuilds the environment from
+  the registry (`make(traj.env_id, traj.env_config)`) and calls `replay`, printing
+  "reproduced OK" or the itemized mismatches. Works for **registered** environments
+  whose full state is a serializable `config` (§6c); an environment carrying a live
+  callable is library-replayable (`crucible.replay`, env in hand) but not
+  CLI-replayable, and the CLI says so.
+
+## 6c. The environment registry (`crucible/registry.py`)
+
+For `crucible replay` to rebuild an environment from a file, the environment must be
+reconstructable from data:
+
+- **`@register("name")`** on the class registers a factory and stamps `env_id =
+  "name"`, so trajectories carry the registered name.
+- **`Environment.config()`** returns a JSON-serializable dict of the constructor
+  arguments. `rollout` records it (trajectory format v2); `make(name, config)`
+  rebuilds an identical environment.
+
+An environment whose behavior lives in a callable (like `CodeTaskEnv`'s grader) can't
+express itself as data, so it leaves `config()` empty and stays out of the registry —
+honestly, rather than pretending. The trajectory format is versioned precisely so this
+addition (v1 → v2) doesn't break old files.
 
 ---
 

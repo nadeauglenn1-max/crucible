@@ -12,8 +12,10 @@ import hashlib
 import sqlite3
 
 from ..env import Action, Environment, Observation, StepResult
+from ..registry import register
 
 
+@register("sql-task")
 class SQLTaskEnv(Environment):
     """A SQL task over an in-memory SQLite database built fresh each episode.
 
@@ -79,3 +81,11 @@ class SQLTaskEnv(Environment):
     def digest(self) -> str:
         raw = f"{self.task}:{self._solved}:{self._attempts}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+    def config(self) -> dict:
+        return {
+            "schema_sql": self.schema_sql,
+            "seed_sql": self.seed_sql,
+            "task": self.task,
+            "expected_rows": self.expected_rows,
+        }

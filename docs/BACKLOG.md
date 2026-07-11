@@ -64,23 +64,15 @@ seccomp / nsjail) slots behind the same seam when it's needed.*
 - **Done when:** a Crucible trajectory round-trips into a minimal TRL/verifiers run in
   an example, with a test asserting the exported record shape.
 
-### 3. Environment registry + `crucible replay <file>`
+### 3. Environment registry + `crucible replay <file>` ✅ done
 
-- **What.** Let the CLI *re-run* a saved episode against a fresh environment, not just
-  summarize it.
-- **Why.** Full replay from the terminal is the natural CLI verb; it needs a way to
-  reconstruct the env a trajectory came from.
-- **How.**
-  1. Add a registry in `crucible/registry.py`: `register(name)(factory)` and
-     `make(name, config) -> Environment`. Environments opt in with a decorator and a
-     serializable `config`.
-  2. Record `env_config` on the `Trajectory` at rollout time (bump `FORMAT_VERSION`,
-     and have `load` accept both versions — the envelope exists for exactly this).
-  3. `crucible replay <file>`: `make(traj.env_id, traj.env_config)` → `replay(env,
-     traj)` → print the `ReplayReport`.
-  4. **Gotchas:** only environments whose full state is captured by a serializable
-     config are CLI-replayable; document that, and keep library `replay` (env in hand)
-     as the always-works path.
+Shipped: `crucible/registry.py` (`register(name)` decorator, `make(name, config)`,
+`registered()`); `Environment.config()` returns a serializable reconstruction dict;
+`rollout` records `env_config` on the trajectory; the on-disk format is now **v2**
+(v1 still loads, `env_config` defaults empty); `crucible replay <file>` rebuilds the
+env with `make` and re-runs it, printing an OK or the itemized mismatches. `GuessEnv`
+and `SQLTaskEnv` are registered; `CodeTaskEnv` (live grader) is library-replayable but
+not CLI-replayable, and the CLI says so. 100% covered.
 
 ### 4. Crucible Space  ·  *the 1am-star demo*
 

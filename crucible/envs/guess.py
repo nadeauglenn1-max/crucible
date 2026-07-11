@@ -11,8 +11,10 @@ import hashlib
 import random
 
 from ..env import Action, Environment, Observation, StepResult
+from ..registry import register
 
 
+@register("guess")
 class GuessEnv(Environment):
     """Guess the secret integer in ``[low, high]``.
 
@@ -64,3 +66,6 @@ class GuessEnv(Environment):
         # Cover the hidden state (secret + counters) so replay is strict.
         raw = f"{self._secret}:{self._guesses}:{self._last}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+    def config(self) -> dict:
+        return {"low": self.low, "high": self.high, "max_guesses": self.max_guesses}

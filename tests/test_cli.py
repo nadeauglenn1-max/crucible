@@ -54,3 +54,45 @@ def test_show_flags_integrity_mismatch(tmp_path, capsys):
 def test_requires_a_subcommand():
     with pytest.raises(SystemExit):
         main([])
+
+
+# --- replay ---------------------------------------------------------------------
+
+def test_replay_reproduces_a_registered_env(tmp_path, capsys):
+    traj = rollout(GuessEnv(), BinarySearchAgent(), seed=7, max_steps=12)
+    rc = main(["replay", saved(tmp_path, traj)])
+    assert rc == 0
+    assert "reproduced OK" in capsys.readouterr().out
+
+
+def test_replay_reports_a_mismatch(tmp_path, capsys):
+    traj = rollout(GuessEnv(), BinarySearchAgent(), seed=7, max_steps=12)
+    traj.transitions[0].reward += 1.0  # tamper the recorded reward
+    rc = main(["replay", saved(tmp_path, traj)])
+    assert rc == 1
+    assert "MISMATCH" in capsys.readouterr().out
+
+
+def test_replay_missing_file(tmp_path):
+    assert main(["replay", str(tmp_path / "nope.json")]) == 2
+
+
+def test_replay_unrebuildable_env(tmp_path, capsys):
+    # An env carrying a live callable isn't registered, so it can't be rebuilt.
+    traj = Trajectory(
+        env_id="CodeTaskEnv",
+        seed=0,
+        initial_observation=None,
+        transitions=[Transition(observation=None, action=1, reward=1.0, done=True, info={}, digest="")],
+        total_reward=1.0,
+    )
+    rc = main(["replay", saved(tmp_path, traj)])
+    assert rc == 2
+    assert "cannot rebuild environment" in capsys.readouterr().out
+
+
+def test_replay_bad_config(tmp_path, capsys):
+    traj = rollout(GuessEnv(), BinarySearchAgent(), seed=7, max_steps=12)
+    traj.env_config = {"bogus_kwarg": 1}  # registered env, unbuildable config
+    rc = main(["replay", saved(tmp_path, traj)])
+    assert rc == 2

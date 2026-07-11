@@ -52,14 +52,21 @@ SEED = (
 )
 TASK = "the name and salary of the employee with the SECOND highest salary"
 EXPECTED = [["Ada", 120000]]
+COLUMNS = "name, salary"
 
-INSTRUCTION = (
-    "You are given a SQLite database with this schema:\n\n"
-    f"{SCHEMA}\n\n"
-    f"Write a single SQL query that returns {TASK}.\n"
-    "Return columns in the order: name, salary.\n"
-    "Reply with ONLY the SQL query, no explanation, no markdown."
-)
+
+def build_instruction(task_text: str, columns: str) -> str:
+    """The conversational instruction for a SQL task over the shared schema."""
+    return (
+        "You are given a SQLite database with this schema:\n\n"
+        f"{SCHEMA}\n\n"
+        f"Write a single SQL query that returns {task_text}.\n"
+        f"Return columns in the order: {columns}.\n"
+        "Reply with ONLY the SQL query, no explanation, no markdown."
+    )
+
+
+INSTRUCTION = build_instruction(TASK, COLUMNS)
 
 
 def make_env() -> SQLTaskEnv:
@@ -100,19 +107,27 @@ def extract_sql(completion: Any) -> str:
 sql_reward = env_reward_func(make_env, parse_completion=extract_sql)
 
 
-def prompt_messages() -> list[dict]:
+def prompt_messages(instruction: str = INSTRUCTION) -> list[dict]:
     """The conversational prompt GRPO trains on (one task → many generations)."""
-    return [{"role": "user", "content": INSTRUCTION}]
+    return [{"role": "user", "content": instruction}]
 
 
 def accuracy(
-    model, tokenizer, n: int = 20, *, temperature: float = 0.9, show: int = 0
+    model,
+    tokenizer,
+    n: int = 20,
+    *,
+    temperature: float = 0.9,
+    show: int = 0,
+    reward_fn: Callable[..., list[float]] = sql_reward,
+    instruction: str = INSTRUCTION,
 ) -> float:
     """Fraction of `n` sampled completions that solve the task (reward > 0).
 
     Uses the same env reward the trainer uses, so "accuracy" here means exactly
     "the environment paid out". Imported by main() for the before/after measurement.
     `show` prints that many (completion, extracted SQL, reward) samples for diagnosis.
+    `reward_fn`/`instruction` let the generalization suite reuse this for other tasks.
     """
     import torch
 
@@ -122,7 +137,7 @@ def accuracy(
     model.eval()
     model.config.use_cache = True
 
-    messages = prompt_messages()
+    messages = prompt_messages(instruction)
     text = tokenizer.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
@@ -143,7 +158,7 @@ def accuracy(
             out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
         )
         # score it through the environment — the one source of truth for "correct"
-        reward = sql_reward(completions=[completion])[0]
+        reward = reward_fn(completions=[completion])[0]
         if reward > 0:
             solved += 1
         if i < show:
@@ -154,12 +169,48 @@ def accuracy(
     return solved / n
 
 
+def grpo_config(output_dir: str, max_steps: int = 80):
+    """The GRPO hyperparameters, sized for a 0.5B model on an 8GB laptop GPU.
+
+    Factored out so the generalization suite trains every task the same way. Note:
+    trl's GRPOConfig has no `max_prompt_length` — passing it raises TypeError.
+    """
+    from trl import GRPOConfig
+
+    return GRPOConfig(
+        output_dir=output_dir,
+        num_generations=8,
+        per_device_train_batch_size=8,
+        gradient_accumulation_steps=1,
+        max_completion_length=100,
+        temperature=0.9,
+        learning_rate=1e-5,
+        max_steps=max_steps,
+        logging_steps=1,
+        save_strategy="no",
+        bf16=True,
+        gradient_checkpointing=True,
+        report_to="none",
+    )
+
+
+def lora_config():
+    """LoRA on the attention projections — the only trainable weights."""
+    from peft import LoraConfig
+
+    return LoraConfig(
+        r=16,
+        lora_alpha=32,
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        task_type="CAUSAL_LM",
+    )
+
+
 def main() -> None:  # pragma: no cover - needs a GPU + the RL stack
     import torch
     from datasets import Dataset
-    from peft import LoraConfig
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    from trl import GRPOConfig, GRPOTrainer
+    from trl import GRPOTrainer
 
     print(f"loading {MODEL} ...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
@@ -176,34 +227,12 @@ def main() -> None:  # pragma: no cover - needs a GPU + the RL stack
     # group of completions per step and scores each through the environment.
     dataset = Dataset.from_list([{"prompt": prompt_messages()}] * 640)
 
-    config = GRPOConfig(
-        output_dir="runtime/grpo-sql",
-        num_generations=8,
-        per_device_train_batch_size=8,
-        gradient_accumulation_steps=1,
-        max_completion_length=100,
-        temperature=0.9,
-        learning_rate=1e-5,
-        max_steps=80,
-        logging_steps=1,
-        save_strategy="no",
-        bf16=True,
-        gradient_checkpointing=True,
-        report_to="none",
-    )
-    lora = LoraConfig(
-        r=16,
-        lora_alpha=32,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-        task_type="CAUSAL_LM",
-    )
-
     trainer = GRPOTrainer(
         model=model,
         reward_funcs=sql_reward,
-        args=config,
+        args=grpo_config("runtime/grpo-sql", max_steps=80),
         train_dataset=dataset,
-        peft_config=lora,
+        peft_config=lora_config(),
     )
     print("training ...")
     trainer.train()

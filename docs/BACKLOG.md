@@ -101,9 +101,12 @@ not CLI-replayable, and the CLI says so. 100% covered.
       shell session where commands accumulate state across steps (mkdir here, write
       there); reward is a goal over the workdir files. The terminal-agent shape;
       replays byte-for-byte for deterministic command sequences. 100% covered.
-- [ ] **HTTP/API env** — wrap a service. **Gotcha:** the hardest to make
-      deterministic (external state); start with a recorded/mock backend and document
-      the caveat honestly (`replay` will expose any drift).
+- [x] **HTTP/API env** — `envs/http.py` `HttpTaskEnv`: wraps a **recording**
+      (request → response, the VCR/cassette pattern), so it's deterministic and
+      registerable. The agent's action is a request `{"method","path"}`; reward when
+      the response body matches expected; unknown paths return a recorded 404, not a
+      crash. Wrapping a live WSGI app behind the same shape is a later option. 100%
+      covered.
 - [x] **git-repo-with-pytest** — done by composition (no new code): `CodeTaskEnv`
       over a repo (`calc.py` + `test_calc.py`) with `command_grader(["python","-m",
       "pytest","-q"])`. The agent edits the source, **real pytest** runs in the

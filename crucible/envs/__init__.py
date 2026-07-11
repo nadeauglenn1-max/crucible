@@ -8,7 +8,15 @@ into a verifiable-reward environment: the thesis in ~60 lines.
 from .code import CodeTaskEnv
 from .command import CommandEnv
 from .guess import GuessEnv
+from .http import HttpTaskEnv
 from .sql import SQLTaskEnv
 from .terminal import TerminalEnv
 
-__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv", "CommandEnv", "TerminalEnv"]
+__all__ = [
+    "GuessEnv",
+    "SQLTaskEnv",
+    "CodeTaskEnv",
+    "CommandEnv",
+    "TerminalEnv",
+    "HttpTaskEnv",
+]

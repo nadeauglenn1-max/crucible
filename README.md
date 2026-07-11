@@ -108,6 +108,7 @@ observations, verifiable reward, digests) and a full worked example are in
 | `CodeTaskEnv` | The SWE-agent shape — **the test suite is the reward function** (edit files, grader runs, green is the reward) |
 | `CommandEnv` | Wrap any **command-line tool** — the agent emits a command, reward is exit-0 + stdout match (sandboxed, registerable) |
 | `TerminalEnv` | A **stateful shell session** — commands accumulate state across steps (mkdir here, write there); reward is a goal over the workdir |
+| `HttpTaskEnv` | Wrap a **recorded HTTP service** (VCR/cassette) — the agent finds the right request; deterministic and registerable |
 
 ## The CLI
 
@@ -160,7 +161,7 @@ detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] Environment registry (`register` / `make`) for rebuild-from-a-file replay
 - [x] Sandboxed grading — untrusted code runs in a subprocess, fail-closed
 - [x] Rubrics — partial-credit rewards from weighted checks
-- [x] Environments: `GuessEnv`, `SQLTaskEnv`, `CodeTaskEnv`, `CommandEnv`, `TerminalEnv`
+- [x] Environments: `GuessEnv`, `SQLTaskEnv`, `CodeTaskEnv`, `CommandEnv`, `TerminalEnv`, `HttpTaskEnv`
 - [x] Real git-repo-with-pytest (by composition) — the agent turns real tests green
 - [x] Training export — `{prompt, completion, reward}` / JSONL
 - [x] TRL adapter — a Crucible environment *as* a GRPO reward function
@@ -173,7 +174,6 @@ detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [ ] Hugging Face Space — an in-browser "forge and replay" demo
 - [ ] A real GRPO training run validating the TRL/verifiers adapters end to end
 - [ ] Container/seccomp sandbox adapter (untrusted agents at scale)
-- [ ] HTTP/API environment (deterministic, recorded backend)
 - [ ] Trajectory commons — shareable, auditable trajectory datasets
 - [ ] Learned reward for non-verifiable tasks *(parked — research)*
 

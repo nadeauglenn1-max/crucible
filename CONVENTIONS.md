@@ -32,5 +32,6 @@ there. If a design starts to look like "prove what a deployed agent did," stop.
 ## Provenance
 
 Clean-room: personal account and environment only, its own history, no code from
-the author's other projects. Intended open (Apache-2.0) on publication; private
-until then.
+the author's other projects. Licensed **MIT**; private for now, flips to public once
+the code-grader sandbox lands. Contributions merge only with a maintainer +1
+(CODEOWNERS + branch protection) — see [`CONTRIBUTING.md`](CONTRIBUTING.md).

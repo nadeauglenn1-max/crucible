@@ -1,0 +1,3 @@
+# Every path is owned by the maintainer, so with branch protection set to "require
+# review from Code Owners", every pull request needs a maintainer +1 before it merges.
+* @nadeauglenn1-max

@@ -153,7 +153,9 @@ lineage). Its "verification" is programmatic task-success checking for reward. I
 deliberately **not** a runtime agent-accountability or governance system — a
 different field. See [`docs/VISION.md`](docs/VISION.md) §5.
 
-## License
+## License & contributing
 
-Proprietary and private for now; intended open (Apache-2.0) on publication. See
-[`LICENSE`](LICENSE).
+**MIT** ([`LICENSE`](LICENSE)) — fork it and build. The repo is private for now and
+flips to public once the code-grader sandbox lands. Contributions are welcome via
+pull request, and every merge needs a maintainer +1 (see
+[`CONTRIBUTING.md`](CONTRIBUTING.md)).

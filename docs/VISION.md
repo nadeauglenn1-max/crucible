@@ -80,9 +80,11 @@ developers adopt it bottom-up, let a company condense out of the adoption.
 - **Company:** the hosted layer — run rollouts at scale, store/serve/replay
   trajectories, curate and rank environments, connect to training. Monetize the
   cloud, not the core.
-- **Licensing decision (open):** Apache-2.0 for max adoption vs. source-available
-  (BSL, HashiCorp/Cockroach-style) to protect the hosted business vs. dual-license
-  (the MySQL move). Deferred until publication.
+- **Licensing decision (made):** **MIT** — maximum bottom-up adoption, matches the
+  author's other open project, simplest thing that works. Contributions merge only
+  with a maintainer +1 (CODEOWNERS + branch-protection), so the project stays open to
+  fork but controlled at the source. (A future source-available/dual move to protect
+  a hosted business remains possible but isn't needed to start.)
 
 ## 7. Roadmap
 

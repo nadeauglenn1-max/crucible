@@ -93,9 +93,12 @@ not CLI-replayable, and the CLI says so. 100% covered.
 - [ ] **HTTP/API env** — wrap a service. **Gotcha:** the hardest to make
       deterministic (external state); start with a recorded/mock backend and document
       the caveat honestly (`replay` will expose any drift).
-- [ ] **git-repo-with-pytest env** — a real repo whose reward is `pytest` going green,
-      built on `CodeTaskEnv` + the sandbox (`command_grader(["python","-m","pytest",
-      "-q"])`). The SWE-agent shape at full scale.
+- [x] **git-repo-with-pytest** — done by composition (no new code): `CodeTaskEnv`
+      over a repo (`calc.py` + `test_calc.py`) with `command_grader(["python","-m",
+      "pytest","-q"])`. The agent edits the source, **real pytest** runs in the
+      sandbox, and green is the reward — proven end-to-end and replayable in
+      `tests/test_pytest_repo.py`. Reuse over rebuild: the shape everyone wants falls
+      out of the pieces already built.
 - **Why.** Reach — each wrapper turns a whole class of existing software into
   environments with near-zero code. Pattern is always the same: `reset` fixes initial
   state, `step` applies the action to the real system, reward is a programmatic check.

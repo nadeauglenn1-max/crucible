@@ -97,17 +97,14 @@ not CLI-replayable, and the CLI says so. 100% covered.
   hardest to make deterministic (external state) — start with a recorded/mock backend
   and document the determinism caveat honestly (`replay` will expose any drift).
 
-### 6. Reward composition (rubrics)
+### 6. Reward composition (rubrics) ✅ done
 
-- **What.** Build a reward from multiple weighted checks instead of one boolean.
-- **Why.** Real tasks are partial-credit; a rubric (tests pass **and** style **and**
-  no secrets leaked) is closer to how work is graded.
-- **How.** A `Rubric` helper (`crucible/reward.py`): a list of `(name, weight, check)`;
-  `score(state) -> (float, breakdown)`. Environments call it in `step`; put the
-  `breakdown` in `info`, keep the scalar as `reward`. **Gotcha:** each check must be
-  deterministic, or the composed reward isn't replayable. Do **not** wander into
-  *learned* reward for non-verifiable tasks yet — that's a careful research design,
-  flagged separately, and stays out until it's earned.
+Shipped: `crucible/reward.py` — `rubric(("name", weight, check), ...)` builds a
+`Rubric`; `score(state) -> (float, breakdown)` returns the weighted fraction passed
+in [0, 1] plus a per-criterion `name → passed` map for `info`. Validated (non-empty,
+non-negative weights, positive total). An environment scores partial credit in `step`
+and still replays byte-for-byte (proven). Stays strictly programmatic — learned
+reward for non-verifiable tasks remains parked (see below). 100% covered.
 
 ### 7. The trajectory commons
 

@@ -183,6 +183,26 @@ env = CodeTaskEnv(files, "make the tests pass", grader)  # untrusted code now ru
   `PYTHONHASHSEED` is pinned, so a deterministic test is still a pure function of the
   files — the episode replays byte-for-byte through the sandbox.
 
+## 6d. Reward composition (`crucible/reward.py`)
+
+Real tasks are partial-credit. A `Rubric` turns several weighted checks into one
+scalar reward:
+
+```python
+from crucible import rubric
+
+r = rubric(
+    ("tests_pass",  3.0, lambda state: run_tests(state)),
+    ("no_secrets",  1.0, lambda state: not leaks_secret(state)),
+)
+score, breakdown = r.score(state)   # score in [0,1]; breakdown = {name: passed}
+```
+
+An environment calls `score` in `step`, returns `score` as the reward, and stashes
+`breakdown` in `info`. **Every check must be a deterministic pure function of the
+state**, or the composed reward won't replay. Rubrics stay strictly programmatic;
+learned reward for non-verifiable tasks is parked (see [`BACKLOG.md`](BACKLOG.md)).
+
 ## 7. Recipe: write your own environment
 
 The whole point of Crucible is that this is easy. Wrap software you already have:

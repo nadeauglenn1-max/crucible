@@ -64,9 +64,15 @@ holds.
       turns a Crucible **environment into a TRL reward function** — each completion is
       parsed to an action and the env scores it verifiably. Zero-dep and tested
       without `trl` installed (it only produces TRL-shaped values). 100% covered.
-      *Remaining validation (optional): a real `trl.GRPOTrainer` run in an example —
-      needs the `trl` dep + a model + compute, so it lives as a documented snippet,
-      not a CI test.*
+- [x] **The learning loop, proven on CPU** — `examples/learn.py` +
+      `tests/test_learning.py`: a policy learns a task purely from a Crucible
+      environment's reward (random baseline 0.26 → learned 0.94) — the same
+      generate → grade → reinforce loop GRPO runs at scale, small enough to run on a
+      laptop and assert in CI.
+- [ ] **The LLM-scale GRPO run** — the credibility demo: fine-tune a small model
+      against a Crucible env with real `trl.GRPOTrainer`. Needs the `trl` dep + a
+      model + a GPU, so it's built and verified *with* a GPU in hand, not shipped
+      unverified.
 - [x] **verifiers adapter** — `crucible/integrations/verifiers.py`, built against
       Prime Intellect's verifiers API (reward funcs return a float, combined by a
       `Rubric`). `env_reward_fn(env_factory)` turns a Crucible environment into a

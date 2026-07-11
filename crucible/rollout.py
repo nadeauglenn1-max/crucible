@@ -99,6 +99,10 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
         )
 
     for i, t in enumerate(traj.transitions):
+        # The observation the agent acted on must reproduce too — otherwise
+        # "byte-for-byte" would be a claim about rewards and digests only.
+        if observation != t.observation:
+            mismatches.append(f"step {i}: observation diverged from the record")
         result = env.step(t.action)
         if result.reward != t.reward:
             mismatches.append(f"step {i}: reward {result.reward} != recorded {t.reward}")
@@ -107,6 +111,7 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
         digest = env.digest()
         if digest != t.digest:
             mismatches.append(f"step {i}: digest {digest!r} != recorded {t.digest!r}")
+        observation = result.observation
         if result.done:
             # The trajectory should end exactly here; any trailing transitions mean
             # the recorded episode and the replay diverged in length.

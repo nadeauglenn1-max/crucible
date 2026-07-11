@@ -99,10 +99,12 @@ Two details worth internalizing:
 observation = env.reset(traj.seed)            # same seed
 check observation == traj.initial_observation
 for each recorded transition t:
+    check observation == t.observation        # the obs the agent acted on reproduces
     result = env.step(t.action)               # same action
     check result.reward == t.reward
     check result.done   == t.done
     check env.digest()  == t.digest
+    observation = result.observation
     if result.done: check we're at the last transition (else "ended early")
 return ReplayReport(ok, steps, mismatches)
 ```
@@ -111,7 +113,9 @@ Every check that fails appends a human-readable string to `mismatches`; `ok` is
 `True` only when the list is empty. This is what "reproducible training data and
 auditable reward" means concretely: **anyone with the trajectory and the environment
 can re-derive the reward and confirm it wasn't fabricated.** A tampered reward, a
-lied-about `done`, a diverged digest, or a wrong episode length all surface here.
+lied-about `done`, a diverged digest, a diverged **observation** (the whole chain the
+agent saw), or a wrong episode length all surface here — so "byte-for-byte" is a claim
+about the entire episode, not just the numbers.
 
 ## 5. The Trajectory format (`crucible/trajectory.py`)
 

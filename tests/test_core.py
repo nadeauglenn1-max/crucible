@@ -118,3 +118,26 @@ def test_default_digest_is_empty_and_still_replays():
     traj = rollout(_MinimalEnv(), ScriptedAgent([7]), seed=0, max_steps=1)
     assert traj.transitions[0].digest == ""  # the base default, no override
     assert replay(_MinimalEnv(), traj).ok
+
+
+class _FlakyObsEnv(Environment):
+    """Deterministic rewards/digests, but a non-deterministic observation at step 1 —
+    exactly the case replay must catch now that it verifies the observation chain."""
+
+    def reset(self, seed: int):
+        self._n = 0
+        return "start"
+
+    def step(self, action):
+        import random
+
+        self._n += 1
+        obs = random.random() if self._n == 1 else "end"
+        return StepResult(observation=obs, reward=0.0, done=self._n >= 2)
+
+
+def test_replay_detects_observation_divergence():
+    traj = rollout(_FlakyObsEnv(), ScriptedAgent([0, 0]), seed=0, max_steps=3)
+    report = replay(_FlakyObsEnv(), traj)
+    assert not report.ok
+    assert any("observation diverged" in m for m in report.mismatches)

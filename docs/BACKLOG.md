@@ -61,8 +61,15 @@ seccomp / nsjail) slots behind the same seam when it's needed.*
       *Remaining validation (optional): a real `trl.GRPOTrainer` run in an example —
       needs the `trl` dep + a model + compute, so it lives as a documented snippet,
       not a CI test.*
-- [ ] **verifiers / prime-rl adapters** — same pattern (env → reward, trajectories →
-      dataset) against those stacks' schemas, added when a user needs them.
+- [x] **verifiers adapter** — `crucible/integrations/verifiers.py`, built against
+      Prime Intellect's verifiers API (reward funcs return a float, combined by a
+      `Rubric`). `env_reward_fn(env_factory)` turns a Crucible environment into a
+      verifiers reward function: extract the completion (chat-style or plain),
+      parse to an action, step a fresh env, return the reward. Zero-dep, tested
+      without `verifiers`. 100% covered.
+- [ ] **prime-rl adapter** — prime-rl consumes verifiers environments, so this is
+      largely downstream of the verifiers adapter; add the thin glue when a user runs
+      it.
 
 ### 3. Environment registry + `crucible replay <file>` ✅ done
 

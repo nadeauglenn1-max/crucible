@@ -149,10 +149,33 @@ ships with tests and moves the docs in the same commit (see
 ## Status & roadmap
 
 **V1 (the MVP) is complete** — author → run → grade → replay → persist, as a real
-tool, on one code path, 100% coverage. What's built and what's next — each future
-feature written to junior-dev "how to build it" detail — lives in
-**[`docs/BACKLOG.md`](docs/BACKLOG.md)**. Next up: sandbox the code grader, then the
-TRL/verifiers export, then a Hugging Face Space.
+tool, on one code path, 100% coverage. Progress at a glance (full "how to build it"
+detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
+
+**Built**
+
+- [x] Core — `Environment` contract, `Trajectory`, `rollout`, `replay`
+- [x] Deterministic replay that verifies the whole episode (observations, rewards, digests)
+- [x] Trajectory persistence (versioned format) + `crucible show` / `crucible replay` CLI
+- [x] Environment registry (`register` / `make`) for rebuild-from-a-file replay
+- [x] Sandboxed grading — untrusted code runs in a subprocess, fail-closed
+- [x] Rubrics — partial-credit rewards from weighted checks
+- [x] Environments: `GuessEnv`, `SQLTaskEnv`, `CodeTaskEnv`, `CommandEnv`, `TerminalEnv`
+- [x] Real git-repo-with-pytest (by composition) — the agent turns real tests green
+- [x] Training export — `{prompt, completion, reward}` / JSONL
+- [x] TRL adapter — a Crucible environment *as* a GRPO reward function
+- [x] verifiers adapter — same bridge for Prime Intellect's stack
+- [x] CI + ≥90% coverage gate (Python 3.11–3.13)
+
+**Next**
+
+- [ ] Flip to public (MIT) + enable branch protection
+- [ ] Hugging Face Space — an in-browser "forge and replay" demo
+- [ ] A real GRPO training run validating the TRL/verifiers adapters end to end
+- [ ] Container/seccomp sandbox adapter (untrusted agents at scale)
+- [ ] HTTP/API environment (deterministic, recorded backend)
+- [ ] Trajectory commons — shareable, auditable trajectory datasets
+- [ ] Learned reward for non-verifiable tasks *(parked — research)*
 
 ## What it is *not*
 

@@ -16,6 +16,7 @@ is a one-line change.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -87,6 +88,77 @@ class SubprocessSandbox:
         except (OSError, ValueError) as exc:
             return GradeResult(False, -1, "", f"launch error: {exc}")
         return GradeResult(proc.returncode == 0, proc.returncode, proc.stdout, proc.stderr)
+
+
+class DockerSandbox:
+    """A `Sandbox` adapter that runs the command inside a container — real isolation
+    of the filesystem, network, memory, and process count, not just a subprocess.
+    This is the adapter to reach for when the agent is genuinely untrusted.
+
+    Fails closed: if Docker is unavailable it returns a non-passing `GradeResult`
+    rather than silently running unisolated, so a deployment without Docker degrades
+    safely. The container execution itself needs a running Docker daemon and so is
+    validated against a real daemon (not in unit CI); the command construction and the
+    docker-unavailable path are unit-tested.
+    """
+
+    def __init__(
+        self,
+        image: str = "python:3.12-slim",
+        *,
+        timeout: float = 30.0,
+        docker: str = "docker",
+        network: str = "none",
+        memory: str = "512m",
+        pids_limit: int = 256,
+    ) -> None:
+        if timeout <= 0:
+            raise ValueError("timeout must be positive")
+        self.image = image
+        self.timeout = timeout
+        self.docker = docker
+        self.network = network
+        self.memory = memory
+        self.pids_limit = pids_limit
+
+    def docker_command(self, host_dir: Path, command: list[str]) -> list[str]:
+        """The `docker run` argv: an ephemeral container with no network, a memory and
+        pids cap, the work dir bind-mounted, running the command."""
+        return [
+            self.docker, "run", "--rm",
+            "--network", self.network,
+            "--memory", self.memory,
+            "--pids-limit", str(self.pids_limit),
+            "-v", f"{host_dir}:/work",
+            "-w", "/work",
+            self.image,
+            *command,
+        ]
+
+    def run(self, files: dict[str, str], command: list[str]) -> GradeResult:
+        if shutil.which(self.docker) is None:
+            return GradeResult(False, -1, "", f"{self.docker} is not available")
+        return self._run_container(files, command)  # pragma: no cover - requires a running Docker daemon
+
+    def _run_container(self, files: dict[str, str], command: list[str]) -> GradeResult:  # pragma: no cover - requires a running Docker daemon
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for path, content in files.items():
+                dest = root / path
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(content, encoding="utf-8")
+            try:
+                proc = subprocess.run(
+                    self.docker_command(root, command),
+                    capture_output=True,
+                    text=True,
+                    timeout=self.timeout,
+                )
+            except subprocess.TimeoutExpired:
+                return GradeResult(False, -1, "", f"timed out after {self.timeout}s")
+            except (OSError, ValueError) as exc:
+                return GradeResult(False, -1, "", f"docker launch error: {exc}")
+            return GradeResult(proc.returncode == 0, proc.returncode, proc.stdout, proc.stderr)
 
 
 def command_grader(command: list[str], sandbox: Sandbox | None = None):

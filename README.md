@@ -159,7 +159,7 @@ detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] Deterministic replay that verifies the whole episode (observations, rewards, digests)
 - [x] Trajectory persistence (versioned format) + `crucible show` / `crucible replay` CLI
 - [x] Environment registry (`register` / `make`) for rebuild-from-a-file replay
-- [x] Sandboxed grading — untrusted code runs in a subprocess, fail-closed
+- [x] Sandboxed grading — subprocess (`SubprocessSandbox`) or container (`DockerSandbox`), fail-closed
 - [x] Rubrics — partial-credit rewards from weighted checks
 - [x] Environments: `GuessEnv`, `SQLTaskEnv`, `CodeTaskEnv`, `CommandEnv`, `TerminalEnv`, `HttpTaskEnv`
 - [x] Real git-repo-with-pytest (by composition) — the agent turns real tests green
@@ -173,7 +173,6 @@ detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [ ] Flip to public (MIT) + enable branch protection
 - [ ] Hugging Face Space — an in-browser "forge and replay" demo
 - [ ] A real GRPO training run validating the TRL/verifiers adapters end to end
-- [ ] Container/seccomp sandbox adapter (untrusted agents at scale)
 - [ ] Trajectory commons — shareable, auditable trajectory datasets
 - [ ] Learned reward for non-verifiable tasks *(parked — research)*
 

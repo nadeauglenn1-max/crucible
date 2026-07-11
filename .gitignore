@@ -15,6 +15,7 @@ coverage.xml
 
 # Local trajectories / runs (don't commit captured episodes)
 /runs/
+/runtime/
 *.trajectory.json
 
 # Editor / OS

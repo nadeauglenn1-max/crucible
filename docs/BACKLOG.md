@@ -69,10 +69,14 @@ holds.
       environment's reward (random baseline 0.26 → learned 0.94) — the same
       generate → grade → reinforce loop GRPO runs at scale, small enough to run on a
       laptop and assert in CI.
-- [ ] **The LLM-scale GRPO run** — the credibility demo: fine-tune a small model
-      against a Crucible env with real `trl.GRPOTrainer`. Needs the `trl` dep + a
-      model + a GPU, so it's built and verified *with* a GPU in hand, not shipped
-      unverified.
+- [x] **The LLM-scale GRPO run** — the credibility demo, done and verified on a GPU:
+      [`examples/train_grpo.py`](../examples/train_grpo.py) fine-tunes
+      `Qwen2.5-0.5B-Instruct` (LoRA, bf16) with real `trl.GRPOTrainer`, the reward
+      being a `SQLTaskEnv` and nothing else. It took a second-highest-salary SQL task
+      from **5% → 100%** in 80 steps on an RTX 5070 (8GB) — the model discovered
+      `... ORDER BY salary DESC LIMIT 1, 1` on its own. Result, chart, and one-command
+      reproduction in [`examples/results/`](../examples/results/README.md). Needs `trl`
+      + a GPU, so it's a documented example, not a CI test.
 - [x] **verifiers adapter** — `crucible/integrations/verifiers.py`, built against
       Prime Intellect's verifiers API (reward funcs return a float, combined by a
       `Rubric`). `env_reward_fn(env_factory)` turns a Crucible environment into a

@@ -31,6 +31,15 @@ Intellect) and a training stack (TRL, verifiers, prime-rl) — it does not have 
 open **authoring layer**. That's the seam Crucible fills. The full argument is in
 [`docs/VISION.md`](docs/VISION.md).
 
+## It actually trains a model
+
+Not a toy: a `SQLTaskEnv` used *directly* as a GRPO reward — no labels, no hand-written
+reward code — took `Qwen2.5-0.5B-Instruct` from **5% → 100%** on a real SQL task in 80
+steps on a single laptop GPU. The model discovered the query itself, guided only by the
+environment. Full run + how to reproduce: [`examples/results/`](examples/results/README.md).
+
+![A 0.5B model learns a SQL task from a Crucible environment](docs/assets/grpo_sql.png)
+
 ## Install
 
 ```bash
@@ -174,11 +183,12 @@ it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] CI + ≥90% coverage gate (Python 3.11–3.13)
 - [x] Public (MIT); contributions via PR with green CI + a code-owner +1 required
 - [x] Gradio demo app (`space/app.py`) — runs locally (`python space/app.py`)
+- [x] **A real GRPO training run** — a 0.5B model learned a SQL task **5% → 100%**
+      with a Crucible environment *as* the reward, no labels
+      ([`examples/results/`](examples/results/README.md))
 
 **Next**
 
-- [ ] **A real GRPO training run** — fine-tune a small model against a Crucible
-      environment end to end; the proof that it *trains*, not just grades
 - [ ] Publish to PyPI (`pip install crucible-rl`)
 - [ ] Trajectory commons — shareable, auditable trajectory datasets on the Hub
 - [ ] Host the demo Space *(app is built; hosting deferred — Hugging Face now

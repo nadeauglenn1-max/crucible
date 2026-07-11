@@ -1,0 +1,2 @@
+gradio>=4
+crucible-rl @ git+https://github.com/nadeauglenn1-max/crucible.git@master

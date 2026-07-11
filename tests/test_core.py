@@ -2,9 +2,20 @@ import copy
 
 import pytest
 
-from crucible import Agent, ReplayReport, Trajectory, replay, rollout
+from crucible import Agent, Environment, ReplayReport, StepResult, Trajectory, replay, rollout
 from crucible.envs import GuessEnv
 from examples.agents import BinarySearchAgent, ScriptedAgent
+
+
+class _MinimalEnv(Environment):
+    """An environment that relies on the base default digest (empty) — proof that
+    an env can skip digests and still be replayed on observations and rewards."""
+
+    def reset(self, seed: int):
+        return 0
+
+    def step(self, action):
+        return StepResult(observation=action, reward=1.0, done=True)
 
 
 def solved_trajectory(seed: int = 42) -> Trajectory:
@@ -101,3 +112,9 @@ def test_agent_protocol_is_runtime_checkable():
 def test_scripted_agent_requires_actions():
     with pytest.raises(ValueError):
         ScriptedAgent([])
+
+
+def test_default_digest_is_empty_and_still_replays():
+    traj = rollout(_MinimalEnv(), ScriptedAgent([7]), seed=0, max_steps=1)
+    assert traj.transitions[0].digest == ""  # the base default, no override
+    assert replay(_MinimalEnv(), traj).ok

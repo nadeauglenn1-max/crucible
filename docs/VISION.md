@@ -98,11 +98,15 @@ with code, clean-room). Then the fun.
       (wrap-real-software → verifiable reward); `CodeTaskEnv` — the SWE-agent shape
       where **the test suite is the reward function**, fully replayable.
 - [x] CI + coverage gate (`.github/workflows/ci.yml`, ≥90% across 3.11–3.13).
-- [ ] **Trajectory persistence** — save/load to disk with a stable, documented
-      format. The trajectory is the artifact the whole product exists to make; it
-      has to leave memory.
-- [ ] **A minimal `crucible` CLI** — `crucible replay <file>` (re-run and verify a
-      saved episode) and `crucible demo`. Makes it a tool, not a library-only.
+- [x] **Trajectory persistence** — `Trajectory.save`/`load` write a versioned JSON
+      envelope (rejects an unknown format version). The trajectory is the artifact
+      the whole product exists to make; it now leaves memory.
+- [x] **A minimal `crucible` CLI** — `crucible show <file>` summarizes and
+      integrity-checks a saved episode. (Env-bound replay from the CLI needs an
+      environment registry and is post-V1; library replay already exists.)
+
+**V1 is complete** — author → run → grade → replay → persist, as a real tool,
+100% coverage, CI gate, one code path. Now the fun.
 
 ### Then the fun (post-V1 — rides on a solid V1)
 

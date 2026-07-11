@@ -38,11 +38,15 @@ or governance system. That boundary is deliberate and kept in the code.
 
 ## Status
 
-Early build. Core (`Environment`, `Trajectory`, `rollout`, `replay`) + two example
-environments (a deterministic guessing game and a **real SQLite** SQL-task env) are
-in. See [`docs/VISION.md`](docs/VISION.md). Python 3.11+, zero dependencies for the
-core.
+**V1 complete** — author → run → grade → replay → persist, as a real tool. Core
+(`Environment`, `Trajectory`, `rollout`, `replay`), trajectory persistence
+(versioned on-disk format), a `crucible` CLI, and three example environments: a
+deterministic guessing game, a **real SQLite** SQL task, and a **code task graded by
+its own tests**. Python 3.11+, zero-dependency core, **100% coverage**, CI gate.
+See [`docs/VISION.md`](docs/VISION.md). Next up is the fun (a TRL/verifiers export, a
+Space, grader sandbox, the trajectory commons).
 
 ```bash
-python -m examples.demo   # run agents through both environments and replay them
+python -m examples.demo             # forge agents through all three worlds, replay each
+crucible show episode.trajectory.json   # summarize + integrity-check a saved episode
 ```

@@ -11,7 +11,12 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 from typing import Any
+
+#: On-disk format version. A saved trajectory is wrapped in an envelope carrying
+#: this, so the format can evolve without silently misreading old files.
+FORMAT_VERSION = 1
 
 
 @dataclass
@@ -73,3 +78,25 @@ class Trajectory:
         """A content hash over the canonical JSON — a stable id for this exact
         episode. Two trajectories with the same fingerprint are the same episode."""
         return hashlib.sha256(self.to_json().encode("utf-8")).hexdigest()
+
+    def save(self, path: str | Path) -> None:
+        """Write the trajectory to disk as a versioned JSON envelope. The trajectory
+        is the artifact the whole product exists to make; this is how it leaves
+        memory to be shared, cached, or replayed later."""
+        envelope = {"version": FORMAT_VERSION, "trajectory": self.to_dict()}
+        Path(path).write_text(
+            json.dumps(envelope, sort_keys=True, indent=2), encoding="utf-8"
+        )
+
+    @classmethod
+    def load(cls, path: str | Path) -> "Trajectory":
+        """Read a trajectory saved by ``save``, rejecting an unrecognized format
+        version rather than silently misreading it."""
+        envelope = json.loads(Path(path).read_text(encoding="utf-8"))
+        version = envelope.get("version")
+        if version != FORMAT_VERSION:
+            raise ValueError(
+                f"unsupported trajectory format version {version!r} "
+                f"(this build reads version {FORMAT_VERSION})"
+            )
+        return cls.from_dict(envelope["trajectory"])

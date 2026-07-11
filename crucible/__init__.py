@@ -11,7 +11,7 @@ from .export import to_records, write_jsonl
 from .registry import make, register, registered
 from .reward import Criterion, Rubric, rubric
 from .rollout import Agent, ReplayReport, replay, rollout
-from .sandbox import GradeResult, Sandbox, SubprocessSandbox, command_grader
+from .sandbox import DockerSandbox, GradeResult, Sandbox, SubprocessSandbox, command_grader
 from .trajectory import Trajectory, Transition
 
 __all__ = [
@@ -27,6 +27,7 @@ __all__ = [
     "ReplayReport",
     "Sandbox",
     "SubprocessSandbox",
+    "DockerSandbox",
     "GradeResult",
     "command_grader",
     "register",

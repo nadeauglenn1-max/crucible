@@ -40,8 +40,14 @@ timeout — fail closed on timeout / crash / launch error), and `command_grader`
 turns a sandboxed command into a `CodeTaskEnv` grader in one line. The agent's code
 now runs in a *child process*, not ours. Proven: pass/fail, a looping submission
 contained by timeout, a bad binary → grade-not-crash, and a full episode replays
-byte-for-byte through the sandbox. 100% covered. *Second adapter (container /
-seccomp / nsjail) slots behind the same seam when it's needed.*
+byte-for-byte through the sandbox. 100% covered.
+
+**Second adapter shipped — `DockerSandbox`** (container isolation: no network, memory
++ pids caps, ephemeral container). Fails closed when Docker is unavailable. Command
+construction and the docker-unavailable path are unit-tested; the container execution
+needs a running Docker daemon and is validated against a real daemon (marked
+`pragma: no cover`, not run in unit CI). Two adapters behind one seam — the plugin law
+holds.
 
 ### 2. Training export  ·  *the adoption keystone*  ·  *core done; trainer adapter open*
 

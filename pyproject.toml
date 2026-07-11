@@ -9,10 +9,36 @@ description = "Turn any real software into a trainable, gradable, replayable RL 
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Glenn Nadeau" }]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+    "reinforcement-learning", "rl", "llm", "agents", "environments",
+    "grpo", "rlvr", "training", "evaluation", "gymnasium",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nadeauglenn1-max/crucible"
+Repository = "https://github.com/nadeauglenn1-max/crucible"
+Issues = "https://github.com/nadeauglenn1-max/crucible/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5"]
+# The RL stack the training examples need (train_grpo.py / train_grpo_suite.py).
+# The core stays zero-dependency; install these only to reproduce the GRPO run.
+train = ["trl>=0.15", "peft>=0.11", "transformers>=4.44", "accelerate>=0.30", "datasets>=2.19"]
 
 [project.scripts]
 crucible = "crucible.cli:main"

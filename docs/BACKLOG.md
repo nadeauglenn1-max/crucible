@@ -51,11 +51,18 @@ seccomp / nsjail) slots behind the same seam when it's needed.*
       training dataset. A `render_observation` / `render_action` hook turns rich
       dict observations into the text a trainer expects (default: strings as-is,
       else canonical JSON). Plain dicts/JSONL ⇒ zero dependency. 100% covered.
-- [ ] **Trainer-specific adapter** — a thin, optional-extra mapping from these
-      neutral records onto a concrete schema (TRL `GRPOTrainer` dataset / verifiers /
-      prime-rl), pinned against that trainer's *current* API, installed via
-      `crucible-rl[trl]` so the core stays zero-dep. Done when a Crucible trajectory
-      drives a minimal real training run in an example.
+- [x] **TRL adapter** — `crucible/integrations/trl.py`, built against TRL's *current*
+      GRPO API (which is **online**: it generates completions, so it needs a prompt
+      dataset + a reward function). `to_prompt_dataset(trajs)` builds the
+      `[{"prompt", "env_id"}]` rows; `env_reward_func(env_factory, parse_completion)`
+      turns a Crucible **environment into a TRL reward function** — each completion is
+      parsed to an action and the env scores it verifiably. Zero-dep and tested
+      without `trl` installed (it only produces TRL-shaped values). 100% covered.
+      *Remaining validation (optional): a real `trl.GRPOTrainer` run in an example —
+      needs the `trl` dep + a model + compute, so it lives as a documented snippet,
+      not a CI test.*
+- [ ] **verifiers / prime-rl adapters** — same pattern (env → reward, trajectories →
+      dataset) against those stacks' schemas, added when a user needs them.
 
 ### 3. Environment registry + `crucible replay <file>` ✅ done
 

@@ -84,18 +84,21 @@ not CLI-replayable, and the CLI says so. 100% covered.
   pick an env, step an agent, render the trajectory, hit "replay" and show the
   `ReplayReport` going green. Reuses `rollout`/`replay` unchanged.
 
-### 5. More environment wrappers
+### 5. More environment wrappers  ·  *CLI done; HTTP + git-repo open*
 
-- **What.** Cover the three shapes people actually have: a **subprocess/CLI** env
-  (wrap any command-line tool), an **HTTP/API** env (wrap a service), and a real
-  **git-repo-with-pytest** env (builds on `CodeTaskEnv` + the §1 sandbox).
-- **Why.** Reach. Each wrapper turns a whole class of existing software into
-  environments with near-zero code — the "wrap what you have" promise at scale.
-- **How.** One module per wrapper in `envs/`. The pattern is always the same:
-  `reset` establishes fixed initial state, `step` applies the action to the real
-  system, reward comes from a programmatic check. **Gotcha:** the HTTP env is the
-  hardest to make deterministic (external state) — start with a recorded/mock backend
-  and document the determinism caveat honestly (`replay` will expose any drift).
+- [x] **Subprocess/CLI env** — `envs/command.py` `CommandEnv`: the agent emits a
+      command (argv), reward is exit-0 **and** stdout matches expected. Reuses the
+      sandbox, is registerable + CLI-replayable (whole config is data), replays
+      byte-for-byte. 100% covered.
+- [ ] **HTTP/API env** — wrap a service. **Gotcha:** the hardest to make
+      deterministic (external state); start with a recorded/mock backend and document
+      the caveat honestly (`replay` will expose any drift).
+- [ ] **git-repo-with-pytest env** — a real repo whose reward is `pytest` going green,
+      built on `CodeTaskEnv` + the sandbox (`command_grader(["python","-m","pytest",
+      "-q"])`). The SWE-agent shape at full scale.
+- **Why.** Reach — each wrapper turns a whole class of existing software into
+  environments with near-zero code. Pattern is always the same: `reset` fixes initial
+  state, `step` applies the action to the real system, reward is a programmatic check.
 
 ### 6. Reward composition (rubrics) ✅ done
 

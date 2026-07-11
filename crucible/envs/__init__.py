@@ -6,7 +6,8 @@ into a verifiable-reward environment: the thesis in ~60 lines.
 """
 
 from .code import CodeTaskEnv
+from .command import CommandEnv
 from .guess import GuessEnv
 from .sql import SQLTaskEnv
 
-__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv"]
+__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv", "CommandEnv"]

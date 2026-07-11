@@ -88,10 +88,16 @@ developers adopt it bottom-up, let a company condense out of the adoption.
 
 - [x] Core: `Environment`, `Trajectory`, `rollout`, `replay`.
 - [x] Example envs: deterministic `GuessEnv`; real-SQLite `SQLTaskEnv`
-      (wrap-real-software → verifiable reward).
+      (wrap-real-software → verifiable reward); `CodeTaskEnv` — the SWE-agent shape
+      where **the test suite is the reward function** (edit files, grader runs,
+      green is the reward), fully replayable.
+- [ ] **Sandbox the code grader.** `CodeTaskEnv` runs the grader in-process today
+      (fine for scripted/test use); a real deployment must isolate it
+      (subprocess/container/seccomp) before untrusted agents. This is the honest
+      security follow-up, deliberately not faked.
 - [ ] Trajectory on-disk format + `crucible replay <file>` CLI.
 - [ ] A `verifiers`/prime-rl-compatible export so trajectories feed real training.
-- [ ] Environment "wrappers" for the big three: a subprocess/CLI env, an HTTP/API
-      env, a git-repo-with-tests env (the SWE-agent shape).
+- [ ] More wrappers: a subprocess/CLI env, an HTTP/API env, a real
+      git-repo-with-pytest grader (subprocess) building on `CodeTaskEnv`.
 - [ ] Reward composition (rubrics) + the honest hard part: signal for
       non-verifiable tasks — *stay programmatic until this is designed carefully.*

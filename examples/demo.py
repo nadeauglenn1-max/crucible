@@ -8,8 +8,11 @@ from __future__ import annotations
 
 from typing import Callable
 
+import importlib.util
+from pathlib import Path
+
 from crucible import Environment, replay, rollout
-from crucible.envs import GuessEnv, SQLTaskEnv
+from crucible.envs import CodeTaskEnv, GuessEnv, SQLTaskEnv
 from examples.agents import BinarySearchAgent, ScriptedAgent
 
 # A small real database and a verifiable task: total ordered per customer, desc.
@@ -29,6 +32,17 @@ RIGHT_SQL = (
     "JOIN orders o ON o.customer_id = c.id "
     "GROUP BY c.id ORDER BY SUM(o.amount) DESC"
 )
+
+# A tiny code repo where the test suite is the reward function.
+BUGGY = "def add(a, b):\n    return a - b\n"
+FIXED = "def add(a, b):\n    return a + b\n"
+
+
+def grade_add(root: Path) -> bool:
+    spec = importlib.util.spec_from_file_location("solution", root / "solution.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.add(2, 3) == 5 and module.add(-1, 1) == 0
 
 
 def run(title: str, make_env: Callable[[], Environment], agent, seed: int) -> None:
@@ -51,6 +65,13 @@ def main() -> None:
         "SQLTaskEnv - real SQLite, verifiable reward (wrong then right)",
         lambda: SQLTaskEnv(SCHEMA, SEED, TASK, EXPECTED),
         ScriptedAgent([WRONG_SQL, RIGHT_SQL]),
+        seed=0,
+    )
+
+    run(
+        "CodeTaskEnv - fix the bug so the test goes green (the reward writes itself)",
+        lambda: CodeTaskEnv({"solution.py": BUGGY}, "Fix add so it adds.", grade_add),
+        ScriptedAgent([{"solution.py": BUGGY}, {"solution.py": FIXED}]),
         seed=0,
     )
 

@@ -5,7 +5,8 @@ and replay reproduce an episode exactly. `SQLTaskEnv` wraps a real SQLite databa
 into a verifiable-reward environment: the thesis in ~60 lines.
 """
 
+from .code import CodeTaskEnv
 from .guess import GuessEnv
 from .sql import SQLTaskEnv
 
-__all__ = ["GuessEnv", "SQLTaskEnv"]
+__all__ = ["GuessEnv", "SQLTaskEnv", "CodeTaskEnv"]

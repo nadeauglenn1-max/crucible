@@ -1,0 +1,4 @@
+# Normalize line endings: text files are LF in the repo, checked out native.
+* text=auto eol=lf
+*.py text eol=lf
+*.md text eol=lf

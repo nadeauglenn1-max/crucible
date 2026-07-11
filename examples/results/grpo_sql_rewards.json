@@ -1,0 +1,29 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "env": "SQLTaskEnv (crucible.envs.sql)",
+  "task": "name and salary of the employee with the SECOND highest salary",
+  "reward": "the Crucible environment: run the query against real SQLite, +1.0 if the rows match exactly, else -0.1",
+  "config": {
+    "algorithm": "GRPO (trl)",
+    "adapter": "LoRA r=16 on q,k,v,o",
+    "num_generations": 8,
+    "max_steps": 80,
+    "learning_rate": 1e-5,
+    "temperature": 0.9,
+    "precision": "bf16",
+    "gpu": "NVIDIA GeForce RTX 5070 Laptop (8GB, Blackwell)"
+  },
+  "baseline_accuracy": 0.05,
+  "trained_accuracy": 1.0,
+  "learned_query": "SELECT name, salary FROM employees ORDER BY salary DESC LIMIT 1, 1",
+  "mean_group_reward_per_step": [
+    0.175, 0.175, 0.0375, 0.0375, 0.0375, 0.45, 0.175, 0.45, 0.175, 0.3125,
+    0.45, 0.175, 0.45, 0.3125, 0.5875, 0.0375, 0.45, 0.5875, 0.725, 0.5875,
+    0.8625, 0.8625, 0.725, 0.8625, 0.725, 0.8625, 0.5875, 0.8625, 0.8625, 1.0,
+    0.8625, 1.0, 0.8625, 0.8625, 0.8625, 0.8625, 1.0, 1.0, 1.0, 1.0,
+    1.0, 1.0, 1.0, 0.5875, 1.0, 1.0, 1.0, 1.0, 0.8625, 0.8625,
+    1.0, 1.0, 1.0, 0.8625, 1.0, 1.0, 0.8625, 1.0, 1.0, 0.8625,
+    1.0, 1.0, 1.0, 1.0, 1.0, 0.8625, 1.0, 0.8625, 0.8625, 1.0,
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.8625, 0.8625, 1.0
+  ]
+}

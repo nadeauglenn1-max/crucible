@@ -81,3 +81,31 @@ environment. It's the **method** that trains, not one lucky task.
 python -m examples.train_grpo_suite          # runs all four (fresh model each), ~15 min on 8GB
 python -m examples.results.plot_grpo_suite   # regenerate the chart from grpo_suite.json (no GPU)
 ```
+
+## Beyond SQL — three *different environment types*
+
+Four SQL tasks is still one env class. The sharper question: does Crucible train
+*different kinds of agents*? [`examples/train_xmodal.py`](../train_xmodal.py) runs the
+**identical** GRPO loop over three genuinely different Crucible environment types on one
+model (`Qwen2.5-1.5B`, big enough that harder modalities have headroom), each with its
+own verifiable reward:
+
+![One loop, three environment types](../../docs/assets/xmodal.png)
+
+| environment type | the agent does | reward is | before | after |
+| --- | --- | --- | --- | --- |
+| `CommandEnv` — **shell** | emits a shell command | exit-0 **and** stdout matches | 70% | **100%** |
+| `CodeTaskEnv` — **code** | writes a Python function | a test **actually runs** and passes | 55% | **85%** |
+| `SQLTaskEnv` — **database** | writes a query (correlated subquery) | the rows match | 25% | **35%** |
+
+The two non-SQL modalities — a **shell agent** and a **coding agent graded by real
+execution** — each climbed +30. The database task here is a deliberately hard correlated
+subquery; it moved only +10, and its reward curve stays noisy near zero — the honest
+picture of a task near this model's ceiling. Same `env_reward_func` seam every time; only
+the environment changes. That's the point: **the training loop is indifferent to the
+domain — wrap any real software, and its reward trains an agent.**
+
+```bash
+python -m examples.train_xmodal              # all three types (fresh model each), ~20 min on 8GB
+python -m examples.results.plot_xmodal       # regenerate the chart from xmodal.json (no GPU)
+```

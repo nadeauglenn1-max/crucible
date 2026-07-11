@@ -169,20 +169,27 @@ def accuracy(
     return solved / n
 
 
-def grpo_config(output_dir: str, max_steps: int = 80):
+def grpo_config(
+    output_dir: str,
+    max_steps: int = 80,
+    *,
+    num_generations: int = 8,
+    max_completion_length: int = 100,
+):
     """The GRPO hyperparameters, sized for a 0.5B model on an 8GB laptop GPU.
 
-    Factored out so the generalization suite trains every task the same way. Note:
-    trl's GRPOConfig has no `max_prompt_length` — passing it raises TypeError.
+    Factored out so the generalization suite trains every task the same way. Larger
+    models / longer completions can lower `num_generations` to fit the same VRAM.
+    Note: trl's GRPOConfig has no `max_prompt_length` — passing it raises TypeError.
     """
     from trl import GRPOConfig
 
     return GRPOConfig(
         output_dir=output_dir,
-        num_generations=8,
-        per_device_train_batch_size=8,
+        num_generations=num_generations,
+        per_device_train_batch_size=num_generations,
         gradient_accumulation_steps=1,
-        max_completion_length=100,
+        max_completion_length=max_completion_length,
         temperature=0.9,
         learning_rate=1e-5,
         max_steps=max_steps,

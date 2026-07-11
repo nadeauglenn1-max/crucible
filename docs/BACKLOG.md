@@ -83,6 +83,12 @@ holds.
       one (15→90, 25→55, 65→70, 40→85 %). The method trains, not one lucky task. The
       task ground truth is CPU-tested in `tests/test_train_grpo_suite.py`; the run
       needs a GPU.
+- [x] **Cross-modality battery** — [`examples/train_xmodal.py`](../examples/train_xmodal.py)
+      answers "is it just SQL?": the identical loop over **three different environment
+      types** on `Qwen2.5-1.5B` — `CommandEnv` (shell) 70→100, `CodeTaskEnv` (code,
+      graded by real execution) 55→85, `SQLTaskEnv` (a hard correlated subquery) 25→35.
+      The two non-SQL agents climbed +30; only the environment changes. Ground truth
+      CPU-tested in `tests/test_train_xmodal.py`; the run needs a GPU.
 - [x] **verifiers adapter** — `crucible/integrations/verifiers.py`, built against
       Prime Intellect's verifiers API (reward funcs return a float, combined by a
       `Rubric`). `env_reward_fn(env_factory)` turns a Crucible environment into a
@@ -167,5 +173,9 @@ reward for non-verifiable tasks remains parked (see below). 100% covered.
   RAG, open-ended work). Stay programmatic until it's designed carefully — a bad
   learned reward is worse than no environment. Also watch the provenance boundary:
   "grade the quality of an agent's judgment" drifts toward the excluded field.
-- **Publishing / licensing.** Repo is local. When it opens: Apache-2.0 (adoption) vs.
-  BSL (protect the hosted business) vs. dual — decided at publication.
+- **A hosted training service.** The core is the open authoring layer; a managed
+  "point it at your software, get a trained adapter back" service is the eventual
+  business. Deliberately parked until the open tool has traction.
+
+_Resolved: the repo is **public under MIT** and the packaging is PyPI-ready — the
+earlier "publish / license" question is settled._

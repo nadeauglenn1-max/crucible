@@ -42,9 +42,16 @@ environment.
 
 And it's **not one lucky task** — a fresh model trained on four *distinct* SQL skills
 improved on every one (subquery, `SUM`, `HAVING`, `AVG`). The method trains, not the
-task. Full runs + how to reproduce: [`examples/results/`](examples/results/README.md).
+task.
 
 ![Four SQL skills, four fresh models, each taught by a Crucible environment](docs/assets/grpo_suite.png)
+
+And **not just SQL** — the identical loop trains *different kinds of agents*: a **shell**
+agent (`CommandEnv`, 70→100%) and a **coding** agent graded by *really running its code*
+(`CodeTaskEnv`, 55→85%), alongside a database agent. Only the environment changes. Full
+runs + how to reproduce: [`examples/results/`](examples/results/README.md).
+
+![One training loop, three different environment types](docs/assets/xmodal.png)
 
 ## Install
 
@@ -191,7 +198,8 @@ it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
 - [x] Gradio demo app (`space/app.py`) — runs locally (`python space/app.py`)
 - [x] **A real GRPO training run** — a 0.5B model learned a SQL task **5% → 100%**
       with a Crucible environment *as* the reward, no labels; **generalizes** across
-      four distinct SQL skills ([`examples/results/`](examples/results/README.md))
+      four distinct SQL skills **and three different environment types** (database,
+      shell, code) ([`examples/results/`](examples/results/README.md))
 
 **Next**
 

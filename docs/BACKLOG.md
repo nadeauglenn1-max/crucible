@@ -98,6 +98,15 @@ holds.
 - [ ] **prime-rl adapter** — prime-rl consumes verifiers environments, so this is
       largely downstream of the verifiers adapter; add the thin glue when a user runs
       it.
+- [ ] **Publish a Crucible environment to the Prime Intellect Environments Hub** ·
+      *the highest-leverage adoption move.* The Hub is not just a gallery — it's a
+      package registry: an environment is a Python module with its own `pyproject.toml`,
+      declares deps, and is distributed as a wheel against the **verifiers spec**. We
+      already emit a verifiers reward function (`env_reward_fn`), so the work is the
+      *packaging shell*: wrap a Crucible env (e.g. `SQLTaskEnv`) as a verifiers-spec Hub
+      module and publish it. **Why:** it puts Crucible *inside* the ecosystem's own
+      distribution and audience — dogfooding into their registry beats any "check out my
+      repo" post. Do this as part of launch, not after. Needs a Prime Intellect account.
 
 ### 3. Environment registry + `crucible replay <file>` ✅ done
 
@@ -154,16 +163,21 @@ non-negative weights, positive total). An environment scores partial credit in `
 and still replays byte-for-byte (proven). Stays strictly programmatic — learned
 reward for non-verifiable tasks remains parked (see below). 100% covered.
 
-### 7. The trajectory commons
+### 7. The auditable commons
 
-- **What.** Trajectories as shareable, versioned datasets ("GitHub for agent
-  experience").
-- **Why.** The network-effect endgame: a growing library of open, *auditable*
-  episodes (auditable because replay makes the reward checkable — the thing no
-  trace-dataset today offers).
-- **How.** A `crucible push/pull` that reads/writes the versioned trajectory format
-  to/from an HF dataset repo (via `huggingface_hub`, an optional extra). Ship a
-  dataset card template that records the env, the seed, and the fingerprint.
+- **What.** Shareable, versioned trajectories and environments, with the one property
+  nothing else offers: **replay-verifiable rewards** (anyone can re-run an episode and
+  confirm the reward was real).
+- **Why.** The network-effect endgame. **But don't rebuild what exists:** Prime
+  Intellect's Environments Hub is already a registry of 2,500+ environments (modules +
+  `pyproject.toml`, distributed as wheels on the verifiers spec). So the play is to
+  *complement* it — Crucible's differentiator is the auditability layer the Hub doesn't
+  have, not a competing hub. First move is item 2's "publish to the Hub"; the commons is
+  what we add *on top* of that distribution.
+- **How.** A `crucible push/pull` for the versioned trajectory format to/from an HF
+  dataset repo (via `huggingface_hub`, an optional extra), with a dataset card that
+  records the env, the seed, and the replay fingerprint — i.e. **replay-verified**
+  datasets. Pairs with publishing the *environments* to the PI Hub (item 2).
 
 ---
 

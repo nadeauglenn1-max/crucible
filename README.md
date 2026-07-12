@@ -6,6 +6,8 @@
 
 **Crucible turns any real software into a trainable, gradable world for AI agents.**
 
+![The Crucible loop: wrap real software into an environment, train an agent in it, and replay every episode](docs/assets/loop.svg)
+
 Wrap a CLI, a database, a codebase, or an API in a few lines and it becomes an
 *environment*: an agent can be run through it, scored on real outcomes, and — the
 part nobody else has — its whole episode **replayed deterministically**, so every run
@@ -175,8 +177,9 @@ ships with tests and moves the docs in the same commit (see
 
 **V1 (the MVP) is complete**, and the repo is **public under MIT** with tests, CI,
 and a code-owner +1 required to merge. Author → run → grade → replay → persist, as a
-real tool, on one code path, 100% coverage. Progress at a glance (full "how to build
-it" detail for every item is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**):
+real tool, on one code path, 100% coverage. Where it goes from here — the three-phase
+direction — is in **[`ROADMAP.md`](ROADMAP.md)**; the per-item "how to build it" detail
+is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**. Progress at a glance:
 
 **Built**
 

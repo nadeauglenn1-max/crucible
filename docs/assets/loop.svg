@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1b1b2f"/>
+    </marker>
+    <marker id="arrowT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2ec4b6"/>
+    </marker>
+    <marker id="arrowR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e94560"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="400" fill="#ffffff"/>
+  <text x="40" y="42" font-size="22" font-weight="700" fill="#1b1b2f">The Crucible loop</text>
+  <text x="40" y="66" font-size="14" fill="#8d99ae">wrap real software → an environment an agent is trained in, and every episode replays</text>
+
+  <!-- Box A: real software -->
+  <rect x="34" y="110" width="210" height="92" rx="12" fill="#f4f4f8" stroke="#8d99ae" stroke-width="1.5"/>
+  <text x="139" y="150" font-size="17" font-weight="600" fill="#1b1b2f" text-anchor="middle">Real software</text>
+  <text x="139" y="174" font-size="13" fill="#8d99ae" text-anchor="middle">CLI · database · repo · API</text>
+
+  <!-- Box B: environment -->
+  <rect x="345" y="110" width="210" height="92" rx="12" fill="#e8faf7" stroke="#2ec4b6" stroke-width="2"/>
+  <text x="450" y="146" font-size="17" font-weight="700" fill="#1b1b2f" text-anchor="middle">Environment</text>
+  <text x="450" y="168" font-size="12.5" fill="#1b1b2f" text-anchor="middle">reset / step</text>
+  <text x="450" y="186" font-size="12.5" fill="#2ca79b" text-anchor="middle">+ verifiable reward</text>
+
+  <!-- Box C: trajectory -->
+  <rect x="656" y="110" width="210" height="92" rx="12" fill="#f4f4f8" stroke="#8d99ae" stroke-width="1.5"/>
+  <text x="761" y="146" font-size="17" font-weight="600" fill="#1b1b2f" text-anchor="middle">Trajectory</text>
+  <text x="761" y="168" font-size="12.5" fill="#8d99ae" text-anchor="middle">replayable episode</text>
+  <text x="761" y="186" font-size="12.5" fill="#8d99ae" text-anchor="middle">seed · actions · rewards</text>
+
+  <!-- A -> B -->
+  <line x1="244" y1="156" x2="337" y2="156" stroke="#1b1b2f" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="290" y="146" font-size="12.5" fill="#1b1b2f" text-anchor="middle" font-weight="600">wrap</text>
+  <text x="290" y="175" font-size="11" fill="#8d99ae" text-anchor="middle">a few lines</text>
+
+  <!-- B -> C -->
+  <line x1="555" y1="156" x2="648" y2="156" stroke="#1b1b2f" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="601" y="146" font-size="12.5" fill="#1b1b2f" text-anchor="middle" font-weight="600">rollout</text>
+  <text x="601" y="175" font-size="11" fill="#8d99ae" text-anchor="middle">record</text>
+
+  <!-- replay loop: C bottom back to B bottom -->
+  <path d="M 761 202 L 761 262 Q 761 276 747 276 L 464 276 Q 450 276 450 262 L 450 206"
+        fill="none" stroke="#2ec4b6" stroke-width="2" marker-end="url(#arrowT)"/>
+  <rect x="512" y="264" width="186" height="24" rx="12" fill="#ffffff"/>
+  <text x="605" y="281" font-size="12.5" fill="#2ca79b" text-anchor="middle" font-weight="600">replay — reproduced byte-for-byte ✓</text>
+  <text x="605" y="306" font-size="11.5" fill="#8d99ae" text-anchor="middle">so every reward is auditable — the part nobody else has</text>
+
+  <!-- reward -> training loop: B down to agent pill, and back up -->
+  <path d="M 400 202 L 400 336" fill="none" stroke="#e94560" stroke-width="2" marker-end="url(#arrowR)"/>
+  <text x="250" y="330" font-size="12.5" fill="#e94560" text-anchor="middle" font-weight="600">reward → GRPO / verifiers</text>
+  <rect x="330" y="344" width="240" height="40" rx="20" fill="#fdeaef" stroke="#e94560" stroke-width="1.5"/>
+  <text x="450" y="369" font-size="14" font-weight="600" fill="#1b1b2f" text-anchor="middle">a better agent</text>
+  <path d="M 570 364 Q 690 364 690 250 Q 690 210 555 190" fill="none" stroke="#e94560" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrowR)"/>
+  <text x="720" y="300" font-size="11" fill="#8d99ae" text-anchor="middle">trains, then</text>
+  <text x="720" y="316" font-size="11" fill="#8d99ae" text-anchor="middle">runs again</text>
+</svg>

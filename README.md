@@ -1,8 +1,7 @@
 # Crucible
 
-> **Provisional codename.** A *crucible* is both the vessel that contains and the
-> trial that transforms — which is exactly what an environment does to an agent.
-> The name may change.
+> **Crucible** — both the vessel that contains and the trial that transforms, which is
+> exactly what an environment does to an agent.
 
 **Crucible turns any real software into a trainable, gradable world for AI agents.**
 

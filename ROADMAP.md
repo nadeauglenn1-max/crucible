@@ -94,6 +94,19 @@ not drift into it. See [`docs/VISION.md`](docs/VISION.md) §5.
 
 ---
 
+## Measuring success
+
+One number, not stars: **environment authors who aren't the maintainer.** Stars are
+attention; an authored environment is someone deciding Crucible was the easiest way to
+turn their software into something an agent can train in. That's the only signal that the
+authoring layer is actually filling the seam.
+
+Concretely, we track *distinct external environment authors per week* — early on by hand
+(a PR adding an environment, a repo importing `crucible`, a shared example), and
+automatically once the commons (Phase 2) can count unique authors pushing environments.
+**Sustained double-digit weekly authors is the trigger to invest in the commons** — until
+then, the work stays on making Phase 1 authoring frictionless.
+
 ## Contributing
 
 The backlog items above are real and mostly independent — a good first contribution is a

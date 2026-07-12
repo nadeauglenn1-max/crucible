@@ -107,6 +107,16 @@ holds.
       module and publish it. **Why:** it puts Crucible *inside* the ecosystem's own
       distribution and audience — dogfooding into their registry beats any "check out my
       repo" post. Do this as part of launch, not after. Needs a Prime Intellect account.
+- [ ] **Atropos adapter** — Nous Research's [Atropos](https://github.com/NousResearch/atropos)
+      is an MIT RL-environments framework (`BaseEnv` → `ScoredDataGroup` payloads over an
+      async trajectory-microservice API; integrates Axolotl/Tinker). It's the closest
+      thing to a competitor, so the answer is the same as everywhere else: *complement,
+      don't collide.* An adapter that turns a Crucible environment into an Atropos
+      `BaseEnv` makes Crucible the authoring layer that feeds Atropos too — same pattern
+      as the TRL and verifiers adapters. **Why:** it neutralizes "isn't this just
+      Atropos?" by riding it, and Atropos notably has **no deterministic replay**, which
+      is exactly Crucible's differentiator to carry across the bridge. Thin glue over the
+      existing rollout; build it when someone actually wires the two together.
 
 ### 3. Environment registry + `crucible replay <file>` ✅ done
 

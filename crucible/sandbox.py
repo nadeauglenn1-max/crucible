@@ -28,6 +28,26 @@ from typing import Protocol, runtime_checkable
 _ENV_ALLOWLIST = ("PATH", "SYSTEMROOT", "SystemRoot", "TEMP", "TMP", "LD_LIBRARY_PATH")
 
 
+def materialize(root: Path, files: dict[str, str]) -> None:
+    """Write ``files`` (relative path -> contents) under ``root``, refusing any path
+    that escapes it.
+
+    This is the single safe file-writer the sandbox and the file-backed environments
+    share — containment must not be a per-caller copy-paste. An absolute path, or a
+    ``..`` that resolves outside ``root``, raises ``ValueError`` instead of writing:
+    the file keys can be agent-controlled (a `CodeTaskEnv` edit), and an agent must
+    never be able to write outside the sandbox by naming ``../../x`` or ``/etc/x``.
+    """
+    root_resolved = root.resolve()
+    for path, content in files.items():
+        dest = (root / path).resolve()
+        # dest must live strictly *under* root: root itself is one of its parents.
+        if root_resolved not in dest.parents:
+            raise ValueError(f"unsafe file path escapes the sandbox: {path!r}")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="utf-8")
+
+
 @dataclass
 class GradeResult:
     """The outcome of a sandboxed command: whether it passed (exit 0), the exit code,
@@ -61,10 +81,12 @@ class SubprocessSandbox:
     def run(self, files: dict[str, str], command: list[str]) -> GradeResult:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for path, content in files.items():
-                dest = root / path
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(content, encoding="utf-8")
+            try:
+                materialize(root, files)
+            except ValueError as exc:
+                # An unsafe path is a non-passing grade, never an escape or an
+                # exception that leaks out (fail closed).
+                return GradeResult(False, -1, "", str(exc))
             return self.run_in(root, command)
 
     def run_in(self, root: Path, command: list[str]) -> GradeResult:
@@ -143,10 +165,10 @@ class DockerSandbox:
     def _run_container(self, files: dict[str, str], command: list[str]) -> GradeResult:  # pragma: no cover - requires a running Docker daemon
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for path, content in files.items():
-                dest = root / path
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(content, encoding="utf-8")
+            try:
+                materialize(root, files)
+            except ValueError as exc:
+                return GradeResult(False, -1, "", str(exc))
             try:
                 proc = subprocess.run(
                     self.docker_command(root, command),

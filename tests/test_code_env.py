@@ -11,6 +11,16 @@ BUGGY = "def add(a, b):\n    return a - b\n"
 FIXED = "def add(a, b):\n    return a + b\n"
 
 
+def test_code_env_rejects_escaping_edit_path():
+    # An agent edit that names a path outside the sandbox must fail the grade and
+    # never write outside the temp dir — even when the grader would otherwise pass.
+    env = CodeTaskEnv(files={"a.py": "x = 1\n"}, task="t", grader=lambda root: True)
+    env.reset(0)
+    result = env.step({"../escape.py": "pwned"})
+    assert not result.done
+    assert result.reward < 0
+
+
 def grade_add(root: Path) -> bool:
     """The 'test suite': import the agent's file and check the behavior. This is a
     pure function of the file contents, which is what keeps the episode replayable."""

@@ -54,6 +54,30 @@ def test_sandbox_rejects_bad_timeout():
         SubprocessSandbox(timeout=0)
 
 
+def test_sandbox_rejects_absolute_path_escape(tmp_path):
+    # An absolute-path file key must not write outside the sandbox; run fails closed.
+    escape = tmp_path / "escaped.txt"
+    result = SubprocessSandbox().run({str(escape): "pwned"}, [sys.executable, "-c", "pass"])
+    assert not result.passed
+    assert not escape.exists()
+
+
+def test_sandbox_rejects_parent_traversal(tmp_path):
+    result = SubprocessSandbox().run({"../escape.txt": "pwned"}, [sys.executable, "-c", "pass"])
+    assert not result.passed
+
+
+def test_materialize_refuses_escape_but_writes_safe_paths(tmp_path):
+    from crucible.sandbox import materialize
+
+    for bad in ("../evil.txt", "sub/../../evil.txt"):
+        with pytest.raises(ValueError):
+            materialize(tmp_path, {bad: "x"})
+    # A nested but contained path is written normally.
+    materialize(tmp_path, {"sub/ok.txt": "hi"})
+    assert (tmp_path / "sub" / "ok.txt").read_text(encoding="utf-8") == "hi"
+
+
 def test_command_grader_drives_codetaskenv_safely():
     # The untrusted "agent code" runs in a subprocess via command_grader, not in
     # this process — and the whole episode still replays byte-for-byte.

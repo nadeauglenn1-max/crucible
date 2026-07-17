@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..env import Action, Environment, Observation, StepResult
+from ..sandbox import materialize
 
 Grader = Callable[[Path], bool]
 
@@ -65,15 +66,15 @@ class CodeTaskEnv(Environment):
     def _grade(self) -> bool:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            for path, content in self._current.items():
-                dest = root / path
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(content, encoding="utf-8")
             try:
+                # File keys come from the agent's edits; materialize refuses any that
+                # would escape the temp dir (an unsafe path is just a failed grade).
+                materialize(root, self._current)
                 return bool(self.grader(root))
             except Exception:
                 # A grader that raises (syntax error in the agent's code, failed
-                # import, failing assertion) is simply a non-passing grade.
+                # import, failing assertion) — or an unsafe edit path — is simply a
+                # non-passing grade.
                 return False
 
     def digest(self) -> str:

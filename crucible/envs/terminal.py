@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..env import Action, Environment, Observation, StepResult
-from ..sandbox import SubprocessSandbox
+from ..sandbox import SubprocessSandbox, materialize
 
 Goal = Callable[[dict[str, str]], bool]
 
@@ -57,10 +57,7 @@ class TerminalEnv(Environment):
             self._tmp.cleanup()
         self._tmp = tempfile.TemporaryDirectory()
         self._root = Path(self._tmp.name)
-        for path, content in self.files.items():
-            dest = self._root / path
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(content, encoding="utf-8")
+        materialize(self._root, self.files)
         self._solved = False
         return {"task": self.task, "files": dict(self.files)}
 

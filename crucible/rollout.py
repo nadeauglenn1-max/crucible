@@ -8,11 +8,31 @@ reproducible training data and auditable rewards.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 from .env import Action, Environment, Observation
 from .trajectory import Trajectory, Transition
+
+
+def _same(a: object, b: object) -> bool:
+    """Whether two observations are the same value.
+
+    A trajectory loaded from disk has been through JSON, which turns tuples into
+    lists, int dict-keys into strings, and so on. A fresh environment produces the
+    native objects. So a fast identity/equality check is backed by a canonical-JSON
+    comparison: replaying a *saved* trajectory is then exactly as faithful as
+    replaying one in memory — reproducibility must not depend on whether the record
+    took a round-trip through disk. Values that aren't JSON-serializable (and so
+    could never be in a saved trajectory) fall back to plain inequality.
+    """
+    if a == b:
+        return True
+    try:
+        return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+    except TypeError:
+        return False
 
 
 @runtime_checkable
@@ -93,7 +113,7 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
     """
     mismatches: list[str] = []
     observation = env.reset(traj.seed)
-    if observation != traj.initial_observation:
+    if not _same(observation, traj.initial_observation):
         mismatches.append(
             f"initial observation: replay {observation!r} != recorded {traj.initial_observation!r}"
         )
@@ -101,7 +121,7 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
     for i, t in enumerate(traj.transitions):
         # The observation the agent acted on must reproduce too — otherwise
         # "byte-for-byte" would be a claim about rewards and digests only.
-        if observation != t.observation:
+        if not _same(observation, t.observation):
             mismatches.append(f"step {i}: observation diverged from the record")
         result = env.step(t.action)
         if result.reward != t.reward:

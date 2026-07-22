@@ -208,3 +208,40 @@ def test_integrity_mismatches_is_the_one_check_replay_shares():
     # guarantee, one implementation, so the two can't disagree about a file.
     assert traj.integrity_mismatches()
     assert set(traj.integrity_mismatches()) <= set(replay(GuessEnv(), traj).mismatches)
+
+
+def test_the_declared_version_is_declared_once():
+    """`pyproject.toml` and `crucible.__version__` must agree.
+
+    Two places state the version, so there are two chances to change one and
+    forget the other — and the failure is silent: the wheel says one thing and the
+    library says another, which is the shape of the defect this whole release was
+    about. Nobody derives it, so something has to check it.
+    """
+    import tomllib
+    from pathlib import Path
+
+    import crucible
+
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    declared = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["version"]
+    assert declared == crucible.__version__, (
+        f"pyproject says {declared}, crucible.__version__ says {crucible.__version__}"
+    )
+
+
+def test_the_changelog_covers_the_current_version():
+    """A release with no changelog entry is a contract change nobody was told about.
+
+    0.2.0 tightened what `replay` verifies, which fails environments that passed
+    before. The reply to the user who found it flagged that; the package flagged it
+    to nobody, because the version stayed 0.1.0 and there was no changelog at all.
+    """
+    from pathlib import Path
+
+    import crucible
+
+    changelog = Path(__file__).resolve().parent.parent / "CHANGELOG.md"
+    assert f"## {crucible.__version__}" in changelog.read_text(encoding="utf-8"), (
+        f"CHANGELOG.md has no entry for {crucible.__version__}"
+    )

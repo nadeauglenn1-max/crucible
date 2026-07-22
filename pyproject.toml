@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crucible-rl"
-version = "0.1.0"
+version = "0.2.0"
 description = "Turn any real software into a trainable, gradable, replayable RL environment for AI agents."
 readme = "README.md"
 requires-python = ">=3.11"

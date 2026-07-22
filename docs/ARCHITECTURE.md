@@ -96,6 +96,9 @@ Two details worth internalizing:
 *fresh* environment and re-drives it with the trajectory's recorded actions:
 
 ```
+check traj.total_reward == sum of step rewards   # the record, checked against itself
+check env.name()   == traj.env_id                # ... in the world it claims
+check env.config() == traj.env_config
 observation = env.reset(traj.seed)            # same seed
 check observation == traj.initial_observation
 for each recorded transition t:
@@ -103,24 +106,38 @@ for each recorded transition t:
     result = env.step(t.action)               # same action
     check result.reward == t.reward
     check result.done   == t.done
+    check result.info   == t.info             # the evidence, not just the score
     check env.digest()  == t.digest
     observation = result.observation
     if result.done: check we're at the last transition (else "ended early")
+check observation == traj.final_observation      # how the episode actually ended
 return ReplayReport(ok, steps, mismatches)
 ```
 
 Every check that fails appends a human-readable string to `mismatches`; `ok` is
 `True` only when the list is empty. This is what "reproducible training data and
 auditable reward" means concretely: **anyone with the trajectory and the environment
-can re-derive the reward and confirm it wasn't fabricated.** A tampered reward, a
-lied-about `done`, a diverged digest, a diverged **observation** (the whole chain the
-agent saw), or a wrong episode length all surface here — so "byte-for-byte" is a claim
-about the entire episode, not just the numbers.
+can re-derive the reward and confirm it wasn't fabricated.**
+
+### The governing rule: every recorded claim is bound
+
+A trajectory field that replay does not verify is not a harmless omission — it is
+precisely the field worth tampering with, because it travels with the artifact
+wearing the artifact's credibility. So the rule is that **replay binds everything the
+record claims**: the world it says it ran in, the numbers it reports, the `info`
+evidence behind those numbers, and the observations at both ends of the episode.
+
+This was not true until [issue #14](https://github.com/nadeauglenn1-max/crucible/issues/14):
+`info`, `total_reward`, `env_id`, and `env_config` were recorded but unchecked, and
+the final observation was never recorded at all. A trajectory with rewritten evidence
+replayed green. It doesn't now — but the general lesson is the one to keep: when you
+add a field to the trajectory, you have added something replay must verify.
 
 ## 5. The Trajectory format (`crucible/trajectory.py`)
 
-A `Trajectory` is a dataclass: `env_id`, `seed`, `initial_observation`, a list of
-`Transition`, and `total_reward` (kept in sync by `add`). It knows how to:
+A `Trajectory` is a dataclass: `env_id`, `seed`, `env_config`, `initial_observation`,
+a list of `Transition`, `total_reward` (kept in sync by `add`), and
+`final_observation` (the last thing the agent saw). It knows how to:
 
 - **Serialize** — `to_json()` uses `sort_keys=True`, so the encoding is *canonical*
   (stable byte-for-byte regardless of insertion order). That's what makes the
@@ -130,15 +147,24 @@ A `Trajectory` is a dataclass: `env_id`, `seed`, `initial_observation`, a list o
 - **Persist** — `save(path)` writes a **versioned envelope**:
   `{"version": FORMAT_VERSION, "trajectory": {...}}`. `load(path)` refuses an
   unrecognized `version` rather than silently misreading an old file. This is why the
-  artifact can leave memory and still be trusted later.
+  artifact can leave memory and still be trusted later. v1 → v2 added `env_config`;
+  v2 → v3 added `final_observation`. Old files still load: a field the record never
+  carried reads back as `UNRECORDED` (a distinct marker, *not* `None`, which is a
+  perfectly good observation) and replay checks nothing there rather than inventing a
+  value to have an opinion about.
+- **Self-check** — `integrity_mismatches()` is everything the record can verify about
+  itself with no environment in hand (today: `total_reward` equals the sum of the
+  step rewards). It lives on the trajectory, once, and *both* `crucible show` and
+  `replay` call it — so the two can never return opposite verdicts on one file.
 
 ## 6. The CLI (`crucible/cli.py`)
 
 - **`crucible show <file>`** loads a saved trajectory, prints a summary (env, seed,
-  steps, total reward, fingerprint), and runs an **integrity check**: the recorded
-  `total_reward` must equal the sum of the step rewards. A self-contained sniff test
-  that needs no environment.
-- **`crucible replay <file>`** re-runs the episode: it rebuilds the environment from
+  steps, total reward, fingerprint), and runs `integrity_mismatches()` — the checks
+  that need no environment. A self-contained sniff test.
+- **`crucible replay <file>`** is strictly stronger: it runs *the same* integrity
+  check and then re-derives the whole episode. `show` never fails a file `replay`
+  passes. It rebuilds the environment from
   the registry (`make(traj.env_id, traj.env_config)`) and calls `replay`, printing
   "reproduced OK" or the itemized mismatches. Works for **registered** environments
   whose full state is a serializable `config` (§6c); an environment carrying a live
@@ -203,8 +229,11 @@ score, breakdown = r.score(state)   # score in [0,1]; breakdown = {name: passed}
 ```
 
 An environment calls `score` in `step`, returns `score` as the reward, and stashes
-`breakdown` in `info`. **Every check must be a deterministic pure function of the
-state**, or the composed reward won't replay. Rubrics stay strictly programmatic;
+`breakdown` in `info` — where **replay verifies it** (§4), so the *reason* for a
+reward is auditable and not merely the scalar. **Every check must be a deterministic
+pure function of the state**, or the composed reward won't replay: an LLM judge
+inside a criterion records a number nobody can re-derive, which degrades replay's
+guarantee to "the judge said 0.7 that day." Rubrics stay strictly programmatic;
 learned reward for non-verifiable tasks is parked (see [`BACKLOG.md`](BACKLOG.md)).
 
 ## 7. Recipe: write your own environment
@@ -244,7 +273,9 @@ Checklist for a *good* (replayable) environment:
 1. **Determinism** — everything random goes behind `seed`; no wall-clock, no network
    nondeterminism in the reward path.
 2. **JSON-serializable** observations, actions, and `info` (so the trajectory records
-   them).
+   them). Note `info` is **verified by replay**, not just logged — so it must be
+   deterministic like everything else. Put a wall-clock timestamp in there and replay
+   will correctly call your environment non-reproducible.
 3. **Verifiable reward** — score against real state (a check, a test, a query), not a
    vibe. That's what plugs into RLVR/GRPO training.
 4. **A `digest`** covering hidden state, if you have any — it makes replay strict.

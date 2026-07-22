@@ -16,10 +16,27 @@ from typing import Any
 
 #: On-disk format versions. A saved trajectory is wrapped in an envelope carrying
 #: the current version, so the format can evolve without silently misreading old
-#: files. Version 2 added ``env_config`` (for CLI replay); version 1 files still
-#: load (their ``env_config`` defaults to empty).
-FORMAT_VERSION = 2
-_SUPPORTED_VERSIONS = (1, 2)
+#: files. Version 2 added ``env_config`` (for CLI replay); version 3 added
+#: ``final_observation`` (the last thing the agent saw, which v1/v2 dropped on the
+#: floor). Older files still load — what they never recorded stays UNRECORDED.
+FORMAT_VERSION = 3
+_SUPPORTED_VERSIONS = (1, 2, 3)
+
+
+class _Unrecorded:
+    """The value of a field the record never carried.
+
+    Distinct from ``None``, which is a legitimate observation. A v1/v2 file predates
+    ``final_observation``; loading one must not invent a value that ``replay`` would
+    then solemnly verify against thin air.
+    """
+
+    def __repr__(self) -> str:
+        return "<unrecorded>"
+
+
+#: Singleton marker — compare with ``is``.
+UNRECORDED = _Unrecorded()
 
 
 @dataclass
@@ -38,8 +55,14 @@ class Transition:
 
 @dataclass
 class Trajectory:
-    """A full episode: the seed that determined it, the initial observation, and the
-    ordered transitions. Serializes to and from JSON so episodes are portable."""
+    """A full episode: the seed that determined it, the environment it ran in, the
+    observations either side of the run, and the ordered transitions. Serializes to
+    and from JSON so episodes are portable.
+
+    Everything recorded here is *claim-bearing* — it is what the trajectory asserts
+    happened — so ``replay`` binds all of it. A field the record carries but nothing
+    verifies is a place to hide a lie.
+    """
 
     env_id: str
     seed: int
@@ -47,6 +70,9 @@ class Trajectory:
     env_config: dict = field(default_factory=dict)
     transitions: list[Transition] = field(default_factory=list)
     total_reward: float = 0.0
+    #: The observation left when the episode ended — the last thing the agent saw,
+    #: and often where the answer is. Set by ``rollout``; UNRECORDED in v1/v2 files.
+    final_observation: Any = UNRECORDED
 
     def add(self, transition: Transition) -> None:
         self.transitions.append(transition)
@@ -56,8 +82,37 @@ class Trajectory:
     def steps(self) -> int:
         return len(self.transitions)
 
+    def integrity_mismatches(self) -> list[str]:
+        """Everything the record can check about *itself*, with no environment in
+        hand: the recorded ``total_reward`` must be the sum of the step rewards.
+
+        This lives here, once, because both ``crucible show`` and ``replay`` need it.
+        Two copies of one guarantee is how a file comes to pass one command and fail
+        the other.
+        """
+        recomputed = sum(t.reward for t in self.transitions)
+        if abs(recomputed - self.total_reward) < 1e-9:
+            return []
+        return [
+            f"total reward: recorded {self.total_reward} "
+            f"!= sum of step rewards {recomputed}"
+        ]
+
     def to_dict(self) -> dict:
-        return asdict(self)
+        # Hand-rolled rather than asdict() so an unrecorded final observation is
+        # *absent* from the encoding, not serialized as a sentinel or as a null that
+        # would be indistinguishable from a genuine None.
+        data: dict[str, Any] = {
+            "env_id": self.env_id,
+            "seed": self.seed,
+            "initial_observation": self.initial_observation,
+            "env_config": self.env_config,
+            "transitions": [asdict(t) for t in self.transitions],
+            "total_reward": self.total_reward,
+        }
+        if self.final_observation is not UNRECORDED:
+            data["final_observation"] = self.final_observation
+        return data
 
     def to_json(self, *, indent: int | None = None) -> str:
         # sort_keys keeps the encoding canonical, so fingerprints are stable.
@@ -73,6 +128,7 @@ class Trajectory:
             env_config=data.get("env_config", {}),  # absent in v1 files
             transitions=transitions,
             total_reward=data.get("total_reward", 0.0),
+            final_observation=data.get("final_observation", UNRECORDED),  # v3+
         )
 
     @classmethod

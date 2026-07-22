@@ -173,6 +173,36 @@ non-negative weights, positive total). An environment scores partial credit in `
 and still replays byte-for-byte (proven). Stays strictly programmatic — learned
 reward for non-verifiable tasks remains parked (see below). 100% covered.
 
+### 6b. Replay binds every recorded claim ✅ done  ·  *the wedge, actually sharp*
+
+**Found by a user, not by us.** [@sterngold](https://github.com/sterngold) ran a
+13-class tamper matrix against native replay ([issue
+#14](https://github.com/nadeauglenn1-max/crucible/issues/14)) and reported it caught
+4/13 — he had to write a strict wrapper hashing all claim-bearing evidence into
+`digest()` to get the rest. He was right on every count, and there was a fifth he
+didn't name plus a worse one underneath:
+
+| Claim | Before | Now |
+| --- | --- | --- |
+| step `info` (where a Rubric's breakdown — the *evidence* — lives) | unverified | bound |
+| `total_reward` | unverified by `replay` | bound |
+| `env_id` | unverified | bound |
+| `env_config` (not in his report) | unverified | bound |
+| final observation | **never recorded at all** | recorded (v3) + bound |
+| `crucible show` vs `crucible replay` | **opposite verdicts on one file** — `show` failed a tampered total, `replay` printed "reproduced OK" and exited 0 | one shared `integrity_mismatches()`; `replay` is strictly stronger |
+
+The docs were overclaiming in exactly the gap: ARCHITECTURE §4 said byte-for-byte was
+"a claim about the entire episode, not just the numbers." It wasn't. Corrected in the
+same change, along with the governing rule now written into CONVENTIONS: **a
+trajectory field that replay does not verify is the field worth tampering with.**
+
+Binding `info` strictly (rather than making it opt-in) is the deliberate call: the
+determinism contract already required it, every shipped env already satisfied it —
+the whole 120-test suite passed untouched — and the alternative is every serious user
+rebuilding sterngold's wrapper. Tightening now costs one external user a conversation;
+tightening after adoption costs everyone a migration. 100% covered, one tamper test
+per class.
+
 ### 7. The auditable commons
 
 - **What.** Shareable, versioned trajectories and environments, with the one property

@@ -140,8 +140,9 @@ observations, verifiable reward, digests) and a full worked example are in
 - `crucible show <file>` — summarize a saved episode (env, seed, steps, reward,
   fingerprint) and integrity-check it.
 - `crucible replay <file>` — rebuild the environment from the registry and **re-run**
-  the episode, confirming it reproduces (or printing the mismatches). Works for
-  registered environments; see [ARCHITECTURE §6c](docs/ARCHITECTURE.md).
+  the episode, confirming it reproduces (or printing the mismatches). Runs the same
+  integrity check `show` does and then some, so the two never disagree about a file.
+  Works for registered environments; see [ARCHITECTURE §6c](docs/ARCHITECTURE.md).
 
 ## Project layout
 
@@ -183,7 +184,9 @@ is in **[`docs/BACKLOG.md`](docs/BACKLOG.md)**. Progress at a glance:
 **Built**
 
 - [x] Core — `Environment` contract, `Trajectory`, `rollout`, `replay`
-- [x] Deterministic replay that verifies the whole episode (observations, rewards, digests)
+- [x] Deterministic replay that binds **every claim the record makes** — observations
+      (including the final one), rewards, the `info` evidence behind them, the total,
+      the environment identity/config, and digests
 - [x] Trajectory persistence (versioned format) + `crucible show` / `crucible replay` CLI
 - [x] Environment registry (`register` / `make`) for rebuild-from-a-file replay
 - [x] Sandboxed grading — subprocess (`SubprocessSandbox`) or container (`DockerSandbox`), fail-closed

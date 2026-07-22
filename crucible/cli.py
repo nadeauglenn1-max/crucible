@@ -1,10 +1,13 @@
 """The ``crucible`` command-line tool.
 
-V1 ships ``crucible show <file>`` — load a saved trajectory, summarize it, and
-integrity-check it (the recorded total reward must equal the sum of the step
-rewards). Env-bound replay from the CLI (re-running a saved episode against a fresh
-environment) needs an environment registry and arrives post-V1; today, replay lives
-in the library (``crucible.replay``) where the environment is in hand.
+- ``crucible show <file>`` — load a saved trajectory, summarize it, and
+  integrity-check it, with no environment needed.
+- ``crucible replay <file>`` — rebuild the environment from the registry and re-run
+  the episode against it.
+
+``replay`` is strictly the stronger check: it runs the same self-contained integrity
+check ``show`` does (via ``Trajectory.integrity_mismatches``) and *then* re-derives
+the episode. The two commands can never reach opposite verdicts on one file.
 """
 
 from __future__ import annotations
@@ -24,16 +27,17 @@ def _cmd_show(path: str) -> int:
         print(f"crucible: cannot read trajectory {path!r}: {exc}")
         return 2
 
-    recomputed = sum(t.reward for t in traj.transitions)
-    integrity_ok = abs(recomputed - traj.total_reward) < 1e-9
+    problems = traj.integrity_mismatches()
 
     print(f"env         : {traj.env_id}")
     print(f"seed        : {traj.seed}")
     print(f"steps       : {traj.steps}")
     print(f"total reward: {traj.total_reward:+.3f}")
     print(f"fingerprint : {traj.fingerprint()}")
-    print(f"integrity   : {'ok' if integrity_ok else 'MISMATCH (total != sum of steps)'}")
-    return 0 if integrity_ok else 1
+    print(f"integrity   : {'ok' if not problems else 'MISMATCH'}")
+    for p in problems:
+        print(f"  - {p}")
+    return 0 if not problems else 1
 
 
 def _cmd_replay(path: str) -> int:

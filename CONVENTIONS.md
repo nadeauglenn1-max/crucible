@@ -13,8 +13,14 @@ may not. Adoption is a feature, and a zero-dependency core is how you get it.
 ## The determinism contract is law
 
 `reset(seed)` fully determines an episode. Same seed + same actions ⇒ same
-observations, rewards, and digests. `replay` verifies this and **reports mismatches
-loudly** — a non-reproducible environment is a bug we surface, never one we hide.
+observations, rewards, `info`, and digests. `replay` verifies this and **reports
+mismatches loudly** — a non-reproducible environment is a bug we surface, never one
+we hide.
+
+**Corollary — every recorded claim is bound.** If the trajectory carries a field,
+`replay` verifies it. An unverified field travels with the artifact wearing the
+artifact's credibility, which makes it the first place to hide a lie. Adding a field
+to `Trajectory` is therefore also a change to `replay` — never one without the other.
 
 ## Provenance boundary (read `docs/VISION.md` §5)
 

@@ -221,6 +221,34 @@ lineage). Its "verification" is programmatic task-success checking for reward. I
 deliberately **not** a runtime agent-accountability or governance system — a
 different field. See [`docs/VISION.md`](docs/VISION.md) §5.
 
+## When you don't need this
+
+Reported by the first person outside the project to evaluate it seriously
+([#14](https://github.com/nadeauglenn1-max/crucible/issues/14),
+[#17](https://github.com/nadeauglenn1-max/crucible/issues/17)), and kept here
+because a tool that never says "use something simpler" is selling rather than
+describing.
+
+**If you only need frozen-record integrity, use canonical JSON and SHA-256.**
+Anchor the source, hash it, compare. A standard-library baseline detected every
+evidence mutation an early pilot threw at it, and it is less machinery than an
+environment, a rollout and a replay. Crucible is not the cheapest way to prove a
+record was not edited, and it should not be chosen for that.
+
+**If your grader is not a deterministic function of state, this will refuse you,
+and that refusal is the design.** Put an LLM judge inside a criterion and the
+trajectory records a number nobody can re-derive; replay then attests that *a
+judge said 0.7 once*, which is not what the word is doing in that sentence. That
+is a real limitation, not a temporary one — see
+[`docs/BACKLOG.md`](docs/BACKLOG.md) for what is parked and why.
+
+**What did earn its keep, in that same evaluation:** a stated environment
+contract, criterion-level diagnostics when something fails, and a replayable
+audit trail — where trajectory semantics are worth the machinery. The verdict was
+*adopt-with-changes, experiment-only, with the dependency-free tests still the
+product gate.* That is an honest place to be, and it is quoted rather than
+paraphrased for a reason.
+
 ## License & contributing
 
 **MIT** ([`LICENSE`](LICENSE)) — fork it and build. The repo is public; contributions

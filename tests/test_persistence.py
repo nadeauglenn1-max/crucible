@@ -71,6 +71,31 @@ def test_replay_is_invariant_under_save_load(tmp_path):
     assert replay(TupleObsEnv(), Trajectory.load(path)).ok  # after a disk round-trip
 
 
+def test_v2_file_without_a_final_observation_still_loads_and_replays(tmp_path):
+    """Format v3 added `final_observation`. An older file never recorded one, so it
+    loads as UNRECORDED and replay simply has nothing to check there — rather than
+    inventing a value and rendering a verdict on it."""
+    from crucible import replay
+    from crucible.trajectory import UNRECORDED
+
+    traj = a_trajectory()
+    legacy = traj.to_dict()
+    del legacy["final_observation"]
+    path = tmp_path / "v2.json"
+    path.write_text(json.dumps({"version": 2, "trajectory": legacy}), encoding="utf-8")
+
+    restored = Trajectory.load(path)
+    assert restored.final_observation is UNRECORDED
+    assert "final_observation" not in restored.to_dict()  # absent, not null
+    assert replay(GuessEnv(), restored).ok
+
+
+def test_unrecorded_reads_as_unrecorded():
+    from crucible.trajectory import UNRECORDED
+
+    assert repr(UNRECORDED) == "<unrecorded>"
+
+
 def test_same_compares_across_json_coercion_and_falls_back():
     from crucible.rollout import _same
 

@@ -141,3 +141,70 @@ def test_replay_detects_observation_divergence():
     report = replay(_FlakyObsEnv(), traj)
     assert not report.ok
     assert any("observation diverged" in m for m in report.mismatches)
+
+
+# --- every recorded claim is bound -----------------------------------------------
+#
+# Reported by @sterngold (issue #14) against a 13-class tamper matrix: replay checked
+# the step-by-step numbers but left the trajectory's other claims — the evidence in
+# `info`, the headline total, the environment it says it ran in, and the observation
+# the episode ended on — unverified. A recorded field nothing checks is exactly the
+# field worth tampering with, so each one gets a test that tampers with it.
+
+
+def test_rollout_records_the_final_observation():
+    traj = solved_trajectory()
+    # The episode ends on a correct guess; that terminal observation used to be
+    # dropped on the floor by the rollout loop.
+    assert traj.final_observation == {"feedback": "correct"}
+
+
+def test_replay_detects_final_observation_tampering():
+    traj = solved_trajectory()
+    traj.final_observation = {"feedback": "bogus"}
+    report = replay(GuessEnv(), traj)
+    assert not report.ok
+    assert any("final observation" in m for m in report.mismatches)
+
+
+def test_replay_detects_info_tampering():
+    traj = solved_trajectory()
+    # `info` carries the evidence — a Rubric's per-criterion breakdown lands here.
+    traj.transitions[-1].info = {"secret": 1, "guesses": 999}
+    report = replay(GuessEnv(), traj)
+    assert not report.ok
+    assert any("info" in m for m in report.mismatches)
+
+
+def test_replay_detects_total_reward_tampering():
+    traj = solved_trajectory()
+    traj.total_reward = 99.0  # the headline number, unmoored from the steps
+    report = replay(GuessEnv(), traj)
+    assert not report.ok
+    assert any("total reward" in m for m in report.mismatches)
+
+
+def test_replay_detects_a_different_environment():
+    traj = solved_trajectory()
+    traj.env_id = "some-other-world"
+    report = replay(GuessEnv(), traj)
+    assert not report.ok
+    assert any("environment:" in m for m in report.mismatches)
+
+
+def test_replay_detects_a_different_environment_config():
+    traj = solved_trajectory()
+    traj.env_config = {"low": 1, "high": 1000, "max_guesses": 10}
+    report = replay(GuessEnv(), traj)
+    assert not report.ok
+    assert any("environment config" in m for m in report.mismatches)
+
+
+def test_integrity_mismatches_is_the_one_check_replay_shares():
+    traj = solved_trajectory()
+    assert traj.integrity_mismatches() == []
+    traj.total_reward += 1.0
+    # The same message `crucible show` prints is the one replay reports — one
+    # guarantee, one implementation, so the two can't disagree about a file.
+    assert traj.integrity_mismatches()
+    assert set(traj.integrity_mismatches()) <= set(replay(GuessEnv(), traj).mismatches)

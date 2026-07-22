@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 from .env import Action, Environment, Observation
-from .trajectory import Trajectory, Transition
+from .trajectory import UNRECORDED, Trajectory, Transition
 
 
 def _same(a: object, b: object) -> bool:
@@ -90,6 +90,10 @@ def rollout(
         if result.done:
             break
 
+    # The last observation is part of the episode too — it is what the agent was
+    # left looking at, and for many tasks it is where the answer is. Recording it
+    # is what lets replay verify the episode all the way to its end.
+    traj.final_observation = observation
     return traj
 
 
@@ -107,11 +111,29 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
     """Re-run ``traj``'s actions against a fresh ``env`` and verify reproducibility.
 
     A fresh environment is reset with the trajectory's seed, then each recorded
-    action is applied and its reward, done-flag, and state digest are compared to the
-    record. Any divergence is reported — loudly, never hidden — because a
-    non-reproducible environment is a bug, not a footnote.
+    action is applied and its reward, done-flag, ``info`` and state digest are
+    compared to the record. Any divergence is reported — loudly, never hidden —
+    because a non-reproducible environment is a bug, not a footnote.
+
+    The rule is that **every claim the trajectory makes gets bound**: the world it
+    says it ran in, the numbers it reports, the evidence it carries, and the
+    observations at both ends of the episode. A recorded field that nothing verifies
+    is not a harmless omission — it is the one field worth tampering with.
     """
-    mismatches: list[str] = []
+    mismatches = list(traj.integrity_mismatches())
+
+    # Bind the world first: verifying a faithful replay of the *wrong* environment
+    # is a green tick that means nothing.
+    if env.name() != traj.env_id:
+        mismatches.append(
+            f"environment: replaying {env.name()!r} against a trajectory "
+            f"recorded in {traj.env_id!r}"
+        )
+    if not _same(env.config(), traj.env_config):
+        mismatches.append(
+            f"environment config: replay {env.config()!r} != recorded {traj.env_config!r}"
+        )
+
     observation = env.reset(traj.seed)
     if not _same(observation, traj.initial_observation):
         mismatches.append(
@@ -128,6 +150,12 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
             mismatches.append(f"step {i}: reward {result.reward} != recorded {t.reward}")
         if result.done != t.done:
             mismatches.append(f"step {i}: done {result.done} != recorded {t.done}")
+        # `info` is where a Rubric puts its per-criterion breakdown — the *reason* for
+        # the reward. Leaving it unbound would make the evidence the one part of the
+        # record anyone could rewrite. It is a deterministic function of seed and
+        # actions like everything else, so it is held to the same standard.
+        if not _same(result.info, t.info):
+            mismatches.append(f"step {i}: info {result.info!r} != recorded {t.info!r}")
         digest = env.digest()
         if digest != t.digest:
             mismatches.append(f"step {i}: digest {digest!r} != recorded {t.digest!r}")
@@ -140,5 +168,14 @@ def replay(env: Environment, traj: Trajectory) -> ReplayReport:
                     f"step {i}: replay ended early ({i + 1}/{len(traj.transitions)} steps)"
                 )
             break
+
+    # A v1/v2 file never recorded a final observation; there is nothing to check, and
+    # we say nothing rather than manufacture a verdict about it.
+    if traj.final_observation is not UNRECORDED and not _same(
+        observation, traj.final_observation
+    ):
+        mismatches.append(
+            f"final observation: replay {observation!r} != recorded {traj.final_observation!r}"
+        )
 
     return ReplayReport(ok=not mismatches, steps=traj.steps, mismatches=mismatches)

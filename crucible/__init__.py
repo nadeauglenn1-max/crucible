@@ -12,7 +12,7 @@ from .registry import make, register, registered
 from .reward import Criterion, Rubric, rubric
 from .rollout import Agent, ReplayReport, replay, rollout
 from .sandbox import DockerSandbox, GradeResult, Sandbox, SubprocessSandbox, command_grader
-from .trajectory import Trajectory, Transition
+from .trajectory import UNRECORDED, Trajectory, Transition
 
 __all__ = [
     "Environment",
@@ -21,6 +21,7 @@ __all__ = [
     "Action",
     "Trajectory",
     "Transition",
+    "UNRECORDED",
     "Agent",
     "rollout",
     "replay",
